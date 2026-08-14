@@ -1,0 +1,2818 @@
+<!DOCTYPE html>
+<!-- saved from url=(0060)https://wodenchen.github.io/StarCG/StarCG_PetCalculator.html -->
+<html lang="zh-TW"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>寵物成長模擬器</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com/">
+  <link href="./寵物成長模擬器_files/css2" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #f3efe9;
+      --bg-card: #faf8f5;
+      --bg-card-hover: #f5f2ec;
+      --border: #ddd5c8;
+      --text-primary: #443c34;
+      --text-secondary: #7a7268;
+      --accent-gold: #b8956a;
+      --accent-warm: #9a8268;
+      --accent-coral: #a07058;
+      --accent-green: #6a9468;
+      --accent-red: #b86868;
+      --shadow: 0 2px 12px rgba(68, 60, 52, 0.07);
+      --radius: 10px;
+      --bg: var(--bg-dark);
+      --surface: var(--bg-card);
+      --text: var(--text-primary);
+      --muted: var(--text-secondary);
+      --accent: #8b7355;
+      --accent-soft: #ebe6de;
+      --danger: var(--accent-red);
+      --ok: var(--accent-green);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Noto Sans TC', -apple-system, sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-primary);
+      min-height: 100vh;
+      line-height: 1.6;
+      font-size: 16px;
+      -webkit-text-size-adjust: 100%;
+      padding-bottom: env(safe-area-inset-bottom, 0);
+    }
+
+    a { color: #7a6548; text-decoration: none; font-weight: 500; }
+    a:hover { color: #5c4e3a; text-decoration: underline; }
+
+    .wrap {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 24px max(16px, env(safe-area-inset-left));
+    }
+
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px 14px;
+      margin-bottom: 20px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    header h1 {
+      font-size: clamp(1.3rem, 4.5vw, 1.75rem);
+      font-weight: 700;
+      color: #6b5a45;
+    }
+    .header-nav {
+      margin-left: auto;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px 14px;
+    }
+    .header-link {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .header-link:hover {
+      color: #8b6914;
+      text-decoration: underline;
+    }
+    header p {
+      flex: 1 1 100%;
+      margin: 0;
+      color: var(--text-secondary);
+      font-size: 0.92rem;
+    }
+
+    .section-icon { font-size: 1.15em; line-height: 1; }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 1.6em;
+      background: #9a8268;
+      color: #fff;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+
+    .stack { display: flex; flex-direction: column; gap: 18px; }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: clamp(14px, 3vw, 20px);
+    }
+    .card h2 {
+      margin: 0 0 14px;
+      font-size: clamp(1rem, 3.5vw, 1.12rem);
+      font-weight: 700;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 0;
+      flex: 1 1 140px;
+    }
+    .field label {
+      font-size: 0.92rem;
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+    .field input, .field select {
+      width: 100%;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      color: var(--text-primary);
+      font: inherit;
+      font-size: 16px;
+      min-height: 46px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    .field select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath fill='%237a7268' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 36px;
+    }
+    .field input:focus, .field select:focus {
+      outline: none;
+      border-color: #a89880;
+      box-shadow: 0 0 0 3px rgba(154, 130, 104, 0.15);
+      background: #fff;
+    }
+
+    .stat-area {
+      display: flex;
+      gap: 12px;
+      align-items: stretch;
+      margin-top: 12px;
+    }
+    .stat-area .stat-scroll {
+      flex: 2;
+      min-width: 0;
+      margin-top: 0;
+    }
+    .stat-scroll {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin-top: 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+    .stat-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.92rem;
+      min-width: 420px;
+    }
+    .stat-table th, .stat-table td {
+      border: 1px solid var(--border);
+      padding: 8px 6px;
+      text-align: center;
+    }
+    .stat-table th {
+      background: var(--accent-soft);
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+    .stat-table .row-label {
+      text-align: left;
+      background: var(--bg-card);
+      font-weight: 600;
+      color: var(--text-primary);
+      white-space: nowrap;
+      width: 76px;
+      padding-left: 10px;
+      position: sticky;
+      left: 0;
+      z-index: 1;
+      box-shadow: 2px 0 4px rgba(68, 60, 52, 0.05);
+    }
+    .stat-table input {
+      width: 100%;
+      min-width: 52px;
+      max-width: 72px;
+      margin: 0 auto;
+      display: block;
+      padding: 10px 4px;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font: inherit;
+      font-size: 16px;
+      text-align: center;
+      color: var(--text-primary);
+      min-height: 42px;
+    }
+    .stat-table input:focus {
+      outline: none;
+      border-color: #a89880;
+      box-shadow: 0 0 0 2px rgba(154, 130, 104, 0.12);
+    }
+
+    .btn-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+
+    button {
+      background: #9a8268;
+      border: none;
+      border-radius: var(--radius);
+      padding: 12px 20px;
+      min-height: 46px;
+      color: #fff;
+      font: inherit;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, opacity 0.15s;
+      touch-action: manipulation;
+    }
+    @media (hover: hover) {
+      button:hover { background: #8b7355; }
+    }
+    button:active { opacity: 0.88; }
+    button.secondary {
+      background: #fff;
+      border: 1px solid #c4b8a8;
+      color: #6b5a45;
+    }
+    @media (hover: hover) {
+      button.secondary:hover {
+        background: var(--bg-card-hover);
+        border-color: #a89880;
+      }
+    }
+    button.toggle.active {
+      background: #b8956a;
+      border: 1px solid #a08058;
+      color: #fff;
+    }
+    button:disabled { opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    .warn, .hint, .status { font-size: 0.9rem; margin-top: 8px; }
+    .warn { color: var(--accent-red); display: none; font-weight: 600; }
+    .hint { color: var(--text-secondary); }
+    .status.ok { color: var(--accent-green); font-weight: 600; }
+    .status.err { color: var(--accent-red); font-weight: 600; }
+
+    .preview {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .preview .box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 6px;
+      text-align: center;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    @media (hover: hover) {
+      .preview .box:hover {
+        border-color: #c4b8a8;
+        background: var(--bg-card-hover);
+      }
+    }
+    .preview .box .ico { font-size: 1.3rem; line-height: 1; margin-bottom: 2px; }
+    .preview .box .k {
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      font-weight: 700;
+    }
+    .preview .box .v {
+      font-size: clamp(1.1rem, 3.5vw, 1.35rem);
+      font-weight: 800;
+      margin-top: 2px;
+      line-height: 1.2;
+      color: var(--text-primary);
+    }
+
+    .reverse-section .req { color: var(--danger); font-weight: 700; }
+    .reverse-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .reverse-grid-stats {
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+    }
+    .rand-quality-result {
+      margin-top: 14px;
+      padding: 14px 16px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--bg-card-hover);
+    }
+    .rand-quality-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1.35rem;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+    .rand-quality-badge.tier-excellent { color: #b8860b; }
+    .rand-quality-badge.tier-good { color: var(--success, #5a9a5a); }
+    .rand-quality-badge.tier-fair { color: var(--text-secondary); }
+    .rand-quality-badge.tier-poor { color: var(--danger); }
+    .rand-quality-badge.tier-uncertain { color: var(--warn, #c17a2a); }
+    .rand-breakdown {
+      font-family: ui-monospace, monospace;
+      font-size: 0.92rem;
+      margin: 6px 0;
+    }
+    .confidence-tag {
+      display: inline-block;
+      font-size: 0.78rem;
+      padding: 2px 8px;
+      border-radius: 999px;
+      margin-top: 6px;
+    }
+    .confidence-tag.high { background: #e8f5e8; color: #3d7a3d; }
+    .confidence-tag.medium { background: #fff4e0; color: #9a6b20; }
+    .confidence-tag.low { background: #fdeaea; color: #a04040; }
+    .reverse-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 20px;
+      align-items: center;
+      margin: 10px 0 4px;
+    }
+    .reverse-options label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.88rem;
+      cursor: pointer;
+    }
+    .reverse-params {
+      margin: 12px 0 16px;
+      padding: 14px;
+      border-radius: var(--radius);
+      border: 1px dashed var(--border);
+      background: var(--bg-card-hover);
+    }
+    .reverse-params-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 16px;
+      align-items: flex-end;
+      margin-top: 10px;
+    }
+    .reverse-params-row .field { min-width: 100px; }
+    .rev-stat-table { margin-top: 10px; }
+    .rev-stat-table input { width: 100%; }
+    .batch-obs-area {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px dashed var(--border);
+    }
+    .batch-obs-area textarea {
+      width: 100%;
+      min-height: 72px;
+      font-family: ui-monospace, monospace;
+      font-size: 0.82rem;
+      padding: 8px 10px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      resize: vertical;
+    }
+    @media (max-width: 720px) {
+      .reverse-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .reverse-grid-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (min-width: 721px) and (max-width: 1100px) {
+      .reverse-grid-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    }
+
+    .params-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+    .params-main { min-width: 0; }
+    .params-side {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: var(--bg-card-hover);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+    }
+    .params-side .field { flex: none; }
+
+    .row-pet-select {
+      align-items: flex-end;
+    }
+    .row-pet-select .field { flex: 1 1 200px; }
+    .row-pet-select .field-btn { flex: 0 0 auto; min-width: 0; }
+    .stat-area .pet-portrait-box {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 8px;
+    }
+    .pet-portrait-box[hidden] { display: none !important; }
+    .stat-area .pet-portrait-box img {
+      width: auto;
+      height: auto;
+      max-width: 100%;
+      max-height: min(240px, 100%);
+      object-fit: contain;
+      image-rendering: pixelated;
+    }
+    .pet-portrait-placeholder {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      text-align: center;
+      line-height: 1.4;
+      padding: 8px;
+    }
+
+    .compare-wrap {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin-top: 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+    table.compare {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+      min-width: 720px;
+    }
+    table.compare th, table.compare td {
+      border-bottom: 1px solid var(--border);
+      padding: 10px 8px;
+      text-align: center;
+      white-space: nowrap;
+    }
+    table.compare th {
+      background: var(--accent-soft);
+      cursor: pointer;
+      user-select: none;
+      font-weight: 600;
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+    }
+    @media (hover: hover) {
+      table.compare th:hover { color: var(--text-primary); }
+      table.compare tr:hover { background: var(--bg-card-hover); }
+    }
+    table.compare tr.highlight {
+      background: #f0ebe3;
+      box-shadow: inset 3px 0 0 var(--accent-gold);
+    }
+    table.compare tr { cursor: pointer; }
+    table.compare tr.dragging { opacity: 0.45; }
+    table.compare tr.drag-over td { box-shadow: inset 0 3px 0 var(--accent-gold); }
+    .compare-ops {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      flex-wrap: nowrap;
+    }
+    .drag-handle {
+      cursor: grab;
+      color: var(--text-secondary);
+      font-size: 1.1rem;
+      line-height: 1;
+      padding: 8px;
+      border-radius: 6px;
+      user-select: none;
+      touch-action: none;
+      min-width: 36px;
+      min-height: 36px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .drag-handle:active { cursor: grabbing; background: var(--accent-soft); }
+    button.icon-btn {
+      padding: 8px 10px;
+      font-size: 0.82rem;
+      min-width: 36px;
+      min-height: 36px;
+      line-height: 1;
+    }
+    button.icon-btn:hover { transform: none; box-shadow: none; }
+    .compare-ops button.secondary { padding: 6px 10px; font-size: 0.8rem; min-height: 36px; }
+    .diff-pos { color: var(--accent-green); font-size: 0.78rem; font-weight: 700; }
+    .diff-neg { color: var(--accent-red); font-size: 0.78rem; font-weight: 700; }
+    .base-dot {
+      display: inline-block;
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+    .base-dot.active {
+      background: var(--accent-gold);
+      border-color: #a08058;
+    }
+    .compare-grade {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 4px;
+      vertical-align: baseline;
+    }
+    .compare-grade.perfect { background: #dcfce7; color: #166534; }
+    .compare-grade.lost { background: #fef3c7; color: #92400e; }
+    .compare-grade.star { background: #dbeafe; color: #1e40af; }
+    .compare-grade.star-max { background: #fef3c7; color: #92400e; }
+    .compare-grade.mod { background: #dc2626; color: #fff; }
+    .compare-grade.mod-none { background: #e7e5e4; color: #57534e; }
+    .compare-meta {
+      display: block;
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-left: 18px;
+      margin-top: 2px;
+      line-height: 1.45;
+      white-space: normal;
+    }
+
+    .load-bar {
+      padding: 12px 16px;
+      border-radius: var(--radius);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      margin-bottom: 18px;
+      font-size: 0.92rem;
+      line-height: 1.6;
+      color: var(--text-secondary);
+    }
+    .load-bar.status.ok {
+      background: #f2f6f2;
+      border-color: #c4d4c4;
+      color: #4a684a;
+    }
+    .load-bar.status.err {
+      background: #f8f4f0;
+      border: 1px solid #d4c8b8;
+      color: #6b5a45;
+    }
+    .load-bar code {
+      background: rgba(68, 60, 52, 0.06);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.86rem;
+    }
+    .load-bar button { margin-top: 8px; font-size: 0.9rem; padding: 10px 16px; }
+    #petsFileInput { display: none; }
+
+    /* ── 手機版 ── */
+    @media (max-width: 860px) {
+      .params-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 720px) {
+      .preview { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .row-pet-select { flex-direction: column; align-items: stretch; }
+      .stat-area { flex-direction: column; }
+      .stat-area .pet-portrait-box { min-height: 140px; }
+      .stat-area .pet-portrait-box img { max-height: 180px; }
+      .row-pet-select .field-btn { width: 100%; }
+      .row-pet-select .field-btn button { width: 100%; }
+      .btn-row button { flex: 1 1 calc(50% - 6px); min-width: 0; }
+      .btn-row button:last-child { flex: 1 1 100%; }
+    }
+    @media (max-width: 480px) {
+      .preview { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+      .field { flex: 1 1 100%; }
+      .row .field[style*="flex:2"] { flex: 1 1 100% !important; }
+      .btn-row button { flex: 1 1 100%; }
+      .compare-ops { flex-wrap: wrap; gap: 6px; max-width: 130px; }
+      .compare-ops button.secondary[data-remove] { flex: 1 1 100%; }
+      header p { font-size: 0.85rem; }
+    }
+    @media (max-width: 360px) {
+      .stat-table .row-label { width: 64px; font-size: 0.82rem; padding-left: 6px; }
+      .stat-table input { max-width: 56px; min-width: 44px; padding: 8px 2px; }
+    }
+  </style>
+<style id="starcg-i18n-style">
+      .lang-switcher { display: inline-flex; align-items: center; gap: 0; margin-left: 6px;
+        border: 1px solid var(--border, #ddd5c8); border-radius: 6px; overflow: hidden; flex-shrink: 0; }
+      .lang-switcher button { border: none; background: transparent; padding: 4px 7px; font-size: 0.72rem;
+        cursor: pointer; color: var(--text-secondary, #7a7268); font-weight: 600; line-height: 1.3; }
+      .lang-switcher button:hover { background: var(--accent-soft, #ebe6de); color: var(--text-primary, #443c34); }
+      .lang-switcher button.active { background: var(--accent, #8b7355); color: #fff; }
+      body.lang-en, body.lang-ko { font-family: 'Noto Sans TC', 'Noto Sans KR', 'Noto Sans', -apple-system, sans-serif; }
+    </style></head>
+<body class="lang-zh-TW">
+  <div class="wrap">
+    <header>
+      <h1 data-i18n="pet.title">🐾 寵物成長模擬器</h1>
+      <nav class="header-nav" data-i18n-aria="nav.aria" aria-label="相關連結">
+        <a href="https://wodenchen.github.io/StarCG/StarCG_PriceChecker.html" class="header-link" data-i18n="nav.price">⭐ 市場查價器</a>
+        <a href="https://wodenchen.github.io/StarCG/StarCG_CharacterCalculator.html" class="header-link" data-i18n="nav.char">⚔️ 角色能力計算</a>
+        <a href="https://www.starcg.net/" target="_blank" rel="noopener noreferrer" class="header-link" data-i18n="nav.site">🌐 官網</a>
+        <a href="https://guide.starcg.net/" target="_blank" rel="noopener noreferrer" class="header-link" data-i18n="nav.guide">📖 官方攻略網</a>
+      <div class="lang-switcher" role="group" aria-label="語言"><button type="button" data-lang="zh-TW" class="active">繁中</button><button type="button" data-lang="en">EN</button><button type="button" data-lang="ko">한</button></div></nav>
+    </header>
+
+    <div id="loadBar" class="load-bar status ok" data-i18n="pet.loadCatalog">✅ 圖鑑已就緒，共 516 隻寵物</div>
+    <input type="file" id="petsFileInput" accept=".json,application/json">
+
+    <div class="stack">
+      <section class="card">
+        <h2><span class="section-icon">⚙️</span> <span data-i18n="pet.params">參數設定</span></h2>
+
+        <div class="params-grid">
+          <div class="params-main">
+            <div class="row">
+              <div class="field"><label data-i18n="pet.race">🧬 種族</label><select id="raceFilter"><option value="">全部</option><option value="不死系">不死系</option><option value="人形系">人形系</option><option value="昆蟲系">昆蟲系</option><option value="植物系">植物系</option><option value="特殊系">特殊系</option><option value="野獸系">野獸系</option><option value="金屬系">金屬系</option><option value="飛行系">飛行系</option><option value="龍系">龍系</option></select></div>
+              <div class="field"><label data-i18n="pet.cardFilter">🃏 卡等</label>
+                <select id="cardFilter">
+                  <option value="" data-i18n-opt="common.all">全部</option>
+                  <option value="普" data-i18n-opt="pet.cardNormal">普卡</option>
+                  <option value="銀" data-i18n-opt="pet.cardSilver">銀卡</option>
+                  <option value="金" data-i18n-opt="pet.cardGold">金卡</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row row-pet-select">
+              <div class="field" style="flex:2"><label data-i18n="pet.selectPet">🔍 選擇圖鑑寵物</label><select id="petSelect"><option value="">請選擇</option><option value="0">赤焰年獸（金 · 總129）</option><option value="1">年獸（金 · 總129）</option><option value="2">帕魯凱斯（金 · 總129）</option><option value="3">凱法（金 · 總129）</option><option value="4">猶大（金 · 總129）</option><option value="5">歌姬雪蕾潔(攻)（金 · 總129）</option><option value="6">歌姬雪蕾潔(魔)（金 · 總129）</option><option value="7">滅龍勇士西恩（金 · 總129）</option><option value="8">勇者里雍(攻)（金 · 總129）</option><option value="9">勇者里雍(魔)（金 · 總129）</option><option value="10">帕布提斯馬（金 · 總129）</option><option value="11">冥界冰龍（金 · 總129）</option><option value="12">兔兔（金 · 總129）</option><option value="13">無頭騎士（金 · 總129）</option><option value="14">南瓜魔王(攻)（金 · 總129）</option><option value="15">南瓜魔王(魔)（金 · 總129）</option><option value="16">骸骨魔獅（金 · 總119）</option><option value="17">劍之精靈亞瑟（金 · 總129）</option><option value="18">惡魔統領（金 · 總129）</option><option value="19">皇冠蘿蔔兔（金 · 總129）</option><option value="20">火精（金 · 總124）</option><option value="21">噩夢牛頭怪（金 · 總129）</option><option value="22">熱砂的歐茲尼克（金 · 總129）</option><option value="23">愛里西雅（金 · 總129）</option><option value="24">雄火龍（金 · 總129）</option><option value="25">暗影螳螂（金 · 總119）</option><option value="26">殺熊者歐茲那克（金 · 總129）</option><option value="27">黑龍（金 · 總129）</option><option value="28">聖誕黃金樹精(攻)（金 · 總129）</option><option value="29">聖誕黃金樹精(魔)（金 · 總129）</option><option value="30">赤鐵獸王（金 · 總129）</option><option value="31">幻銀獸王（金 · 總129）</option><option value="32">姹紫甲冑（金 · 總124）</option><option value="33">虎頭蜂（金 · 總129）</option><option value="34">迅龍（金 · 總129）</option><option value="35">辰龍(攻)（金 · 總129）</option><option value="36">辰龍(魔)（金 · 總129）</option><option value="37">海賊頭目（金 · 總129）</option><option value="38">寒冰牛頭怪（金 · 總129）</option><option value="39">達哈卡（金 · 總124）</option><option value="40">蘿蔔兔（金 · 總129）</option><option value="41">聖誕樹精(攻)（金 · 總129）</option><option value="42">聖誕樹精(魔)（金 · 總129）</option><option value="43">火焰舞者（金 · 總124）</option><option value="44">貓熊（金 · 總119）</option><option value="45">死灰螳螂（金 · 總119）</option><option value="46">木乃伊（金 · 總124）</option><option value="47">堤風（金 · 總129）</option><option value="48">暗影龍蜥（金 · 總124）</option><option value="49">殘暴呼呼國王（金 · 總129）</option><option value="50">惡魔蝙蝠（金 · 總124）</option><option value="51">神龍（金 · 總129）</option><option value="52">妖狐（金 · 總119）</option><option value="53">大地牛頭怪（金 · 總129）</option><option value="54">冰藍史萊姆（金 · 總129）</option><option value="55">水精（金 · 總124）</option><option value="56">吉伊卡哇（金 · 總129）</option><option value="57">彩虹史萊姆（金 · 總129）</option><option value="58">迷你彩虹史萊姆（金 · 總129）</option><option value="59">兔耳蝙蝠（金 · 總129）</option><option value="60">時雨（金 · 總129）</option><option value="61">翼龍（金 · 總119）</option><option value="62">鞭撻草（金 · 總119）</option><option value="63">黃金樹精（金 · 總119）</option><option value="64">大公雞（金 · 總124）</option><option value="65">兔耳嚇人箱（金 · 總129）</option><option value="66">黃金幼龍（金 · 總129）</option><option value="67">冰冷樹精（金 · 總129）</option><option value="68">貓人（金 · 總124）</option><option value="69">彩翼飛龍（金 · 總129）</option><option value="70">瓦傑特（金 · 總129）</option><option value="71">暗影翼龍（金 · 總124）</option><option value="72">小石像怪（金 · 總119）</option><option value="73">天使蝙蝠（金 · 總124）</option><option value="74">黑暗鳥人（金 · 總129）</option><option value="75">黑蘿蔔兔（金 · 總129）</option><option value="76">地精（金 · 總124）</option><option value="77">血雨（金 · 總124）</option><option value="78">幻影殺手蝎（金 · 總124）</option><option value="79">暗醫阿魯巴斯（金 · 總129）</option><option value="80">火焰牛頭怪（金 · 總129）</option><option value="81">鼠王（金 · 總129）</option><option value="82">丸子炸彈（金 · 總119）</option><option value="83">風精（金 · 總124）</option><option value="84">奇美拉（金 · 總124）</option><option value="85">純白嚇人箱（金 · 總129）</option><option value="86">不死露比(攻)（金 · 總129）</option><option value="87">不死露比(魔)（金 · 總129）</option><option value="88">阿卡斯（金 · 總129）</option><option value="89">魔術師烏莉兒（金 · 總124）</option><option value="90">水藍鼠（金 · 總119）</option><option value="91">多拉姆糖（金 · 總129）</option><option value="92">幻影（金 · 總124）</option><option value="93">旋律影子（金 · 總124）</option><option value="94">暗影（金 · 總124）</option><option value="95">陰影（金 · 總124）</option><option value="96">豬豬護士長（金 · 總129）</option><option value="97">小八貓（金 · 總129）</option><option value="98">丘比特（金 · 總119）</option><option value="99">骷髏海盜（金 · 總119）</option><option value="100">依代（金 · 總129）</option><option value="101">深淵里雍(攻)（金 · 總129）</option><option value="102">深淵里雍(魔)（金 · 總129）</option><option value="103">冰羽公主（金 · 總129）</option><option value="104">梅菲斯特（金 · 總129）</option><option value="105">斯卡蒂（金 · 總129）</option><option value="106">櫻花螳螂（金 · 總129）</option><option value="107">煉焰飛龍（金 · 總129）</option><option value="108">烈風牛頭怪（金 · 總129）</option><option value="109">暗黑烈風牛頭怪（金 · 總129）</option><option value="110">佛利波羅（金 · 總129）</option><option value="111">暗黑歌姬(攻)（金 · 總129）</option><option value="112">暗黑歌姬(魔)（金 · 總129）</option><option value="113">奪魂南瓜魔王(攻)（金 · 總129）</option><option value="114">奪魂南瓜魔王(魔)（金 · 總129）</option><option value="115">翱翔年獸（金 · 總129）</option><option value="116">國皇鼠（金 · 總129）</option><option value="117">白龍（金 · 總129）</option><option value="118">聖紋白龍（金 · 總129）</option><option value="119">棺姬艾利菲亞（金 · 總129）</option><option value="120">大黑龍骨（金 · 總129）</option><option value="121">鋼羽隼（金 · 總129）</option><option value="122">琥珀年獸（金 · 總129）</option><option value="123">億萬兩招財貓（攻）（金 · 總129）</option><option value="124">億萬兩招財貓（魔）（金 · 總129）</option><option value="125">卡蓮（金 · 總129）</option><option value="126">炎之精靈紅蓮（金 · 總129）</option><option value="127">飛天招財貓（金 · 總129）</option><option value="128">黃金鯉魚武士（金 · 總129）</option><option value="129">聖誕冰冷樹精(攻)（金 · 總129）</option><option value="130">聖誕冰冷樹精(魔)（金 · 總129）</option><option value="131">幽冥南瓜魔王(攻)（金 · 總129）</option><option value="132">幽冥南瓜魔王(魔)（金 · 總129）</option><option value="133">閃電陰影（金 · 總129）</option><option value="134">冰晶豬王（金 · 總129）</option><option value="135">蒼炎聖劍（金 · 總129）</option><option value="136">惡魔將軍（金 · 總129）</option><option value="137">彩蛋雛鳥（金 · 總129）</option><option value="138">雪羽公主（金 · 總129）</option><option value="139">軟軟湯圓兔（金 · 總129）</option><option value="140">綿綿湯圓兔（金 · 總129）</option><option value="141">白銀聖衛(攻)（金 · 總129）</option><option value="142">白銀聖衛(魔)（金 · 總129）</option><option value="143">神樂火舞（金 · 總129）</option><option value="144">神樂雪舞（金 · 總129）</option><option value="145">失翼之龍杜瓦（金 · 總129）</option><option value="146">翠紋失翼之龍杜瓦（金 · 總129）</option><option value="147">赤金皇蠍（金 · 總129）</option><option value="148">利維坦（金 · 總129）</option><option value="149">龍蝦霸王（金 · 總124）</option><option value="150">惡魔女帝（金 · 總129）</option><option value="151">粉櫻千代（金 · 總129）</option><option value="152">李貝留斯（金 · 總129）</option><option value="153">神官維克特（金 · 總129）</option><option value="154">未淨化的怨念 (攻)（金 · 總129）</option><option value="155">未淨化的怨念 (魔)（金 · 總129）</option><option value="156">蜜桃多拉姆糖 （金 · 總129）</option><option value="157">燼火狂牛（金 · 總129）</option><option value="158">玄武（金 · 總129）</option><option value="159">碧幽騎士（金 · 總129）</option><option value="160">緋璇(攻)（金 · 總129）</option><option value="161">緋璇(魔)（金 · 總129）</option><option value="162">烈炎聖劍（金 · 總129）</option><option value="163">刻耳柏洛斯（金 · 總129）</option><option value="164">蒼雷幻龍(攻)（金 · 總129）</option><option value="165">蒼雷幻龍(魔)（金 · 總129）</option><option value="166">血盟騎士（金 · 總129）</option></select></div>
+              <div class="field field-btn" style="align-self:end">
+                <label>&nbsp;</label>
+                <button type="button" id="maxStarBtn" class="toggle secondary" data-i18n="pet.maxStarOff">⭐ 一鍵滿星：OFF</button>
+              </div>
+            </div>
+            <div id="starStatus" class="hint" style="display:none"></div>
+
+            <div class="row">
+              <div class="field" style="flex:2"><label data-i18n="pet.name">✏️ 寵物名稱</label><input id="petName" value="" data-i18n-placeholder="pet.namePh" placeholder="選擇圖鑑後自動帶入"></div>
+            </div>
+          </div>
+
+          <div class="params-side">
+            <div class="field"><label data-i18n="pet.level">📈 等級 (Lv)</label><input type="number" id="level" value="120" min="1" max="200"></div>
+            <div class="field">
+              <label data-i18n="pet.cardRank">🃏 卡片等級</label>
+              <select id="cardRank"><option value="0">—</option><option value="6">普卡 (+6 BP/改)</option><option value="7">銀卡 (+7 BP/改)</option><option value="8">金卡 (+8 BP/改)</option></select>
+            </div>
+            <div class="field">
+              <label data-i18n="pet.modGrade">🔧 改造次數</label>
+              <select id="modGrade"><option value="0">0 改</option><option value="1">1 改</option><option value="2">2 改</option><option value="3">3 改</option><option value="4">4 改</option><option value="5">5 改</option><option value="6">6 改</option></select>
+            </div>
+          </div>
+        </div>
+
+        <div class="stat-area">
+          <div class="stat-scroll">
+          <table class="stat-table">
+            <thead>
+              <tr>
+                <th></th>
+                <th data-i18n="pet.statVit">體</th><th data-i18n="pet.statStr">力</th><th data-i18n="pet.statDef">強</th><th data-i18n="pet.statAgi">速</th><th data-i18n="pet.statMag">魔</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="row-label" data-i18n="pet.rowBase">原始檔次</td>
+              <td><input class="base-stat" type="number" step="0.01" value="30"></td>
+              <td><input class="base-stat" type="number" step="0.01" value="35"></td>
+              <td><input class="base-stat" type="number" step="0.01" value="30"></td>
+              <td><input class="base-stat" type="number" step="0.01" value="25"></td>
+              <td><input class="base-stat" type="number" step="0.01" value="20"></td>
+              </tr>
+              <tr>
+                <td class="row-label" data-i18n="pet.rowLost">掉檔</td>
+                <td><input class="lost-stat" type="number" value="0" min="0" max="4"></td>
+                <td><input class="lost-stat" type="number" value="0" min="0" max="4"></td>
+                <td><input class="lost-stat" type="number" value="0" min="0" max="4"></td>
+                <td><input class="lost-stat" type="number" value="0" min="0" max="4"></td>
+                <td><input class="lost-stat" type="number" value="0" min="0" max="4"></td>
+              </tr>
+              <tr>
+                <td class="row-label" data-i18n="pet.rowRand">隨機檔</td>
+                <td><input class="rand-stat" type="number" value="2" min="0" max="10"></td>
+                <td><input class="rand-stat" type="number" value="2" min="0" max="10"></td>
+                <td><input class="rand-stat" type="number" value="2" min="0" max="10"></td>
+                <td><input class="rand-stat" type="number" value="2" min="0" max="10"></td>
+                <td><input class="rand-stat" type="number" value="2" min="0" max="10"></td>
+              </tr>
+              <tr>
+                <td class="row-label" data-i18n="pet.rowManual">配點</td>
+                <td><input class="manual-point" type="number" value="0" min="0"></td>
+                <td><input class="manual-point" type="number" value="0" min="0"></td>
+                <td><input class="manual-point" type="number" value="0" min="0"></td>
+                <td><input class="manual-point" type="number" value="0" min="0"></td>
+                <td><input class="manual-point" type="number" value="0" min="0"></td>
+              </tr>
+            </tbody>
+          </table>
+          </div>
+          <div class="pet-portrait-box" id="petPortraitBox" hidden="">
+            <img id="petPortrait" alt="" decoding="async">
+          </div>
+        </div>
+
+        <div class="hint"><span data-i18n="pet.randSum">🎲 隨機檔總和：</span><strong id="randDisplay">10</strong><span id="randDisplaySuffix"> / 10</span></div>
+        <div id="randWarn" class="warn" data-i18n="pet.randWarn" style="display: none;"></div>
+        <div class="hint"><span data-i18n="pet.points">💎 可用點數：</span><strong id="pointDisplay">0 / 119（剩餘 119）</strong></div>
+        <div id="pointWarn" class="warn" data-i18n="pet.pointWarn" style="display: none;">⚠️ 配點超過上限！</div>
+        <div id="manualWarn" class="warn" style="display: none;"></div>
+
+        <div class="btn-row">
+          <button type="button" class="secondary" onclick="maxStat(0)" data-i18n="pet.btnAllVit">❤️ 全體</button>
+          <button type="button" class="secondary" onclick="maxStat(1)" data-i18n="pet.btnAllStr">💪 全力</button>
+          <button type="button" class="secondary" onclick="maxStat(2)" data-i18n="pet.btnAllDef">⚔️ 全強</button>
+          <button type="button" class="secondary" onclick="maxStat(3)" data-i18n="pet.btnAllAgi">💨 全速</button>
+          <button type="button" class="secondary" onclick="maxStat(4)" data-i18n="pet.btnAllMag">✨ 全魔</button>
+          <button type="button" onclick="addToComparison()" data-i18n="pet.addCompare">➕ 加入比較清單</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2><span class="section-icon">📊</span> <span data-i18n="pet.preview">當前數值試算</span></h2>
+        <div class="preview" id="preview">
+          <div class="box"><div class="ico">❤️</div><div class="k">HP</div><div class="v" data-k="hp">2580.18</div></div>
+          <div class="box"><div class="ico">💧</div><div class="k">MP</div><div class="v" data-k="mp">2141.72</div></div>
+          <div class="box"><div class="ico">⚔️</div><div class="k" data-k="atk">攻擊</div><div class="v" data-k="atk">645.64</div></div>
+          <div class="box"><div class="ico">🛡️</div><div class="k" data-k="def">防禦</div><div class="v" data-k="def">630.28</div></div>
+          <div class="box"><div class="ico">💨</div><div class="k" data-k="agi">敏捷</div><div class="v" data-k="agi">371.81</div></div>
+          <div class="box"><div class="ico">💚</div><div class="k" data-k="rec">回復</div><div class="v" data-k="rec">185.31</div></div>
+          <div class="box"><div class="ico">🔮</div><div class="k" data-k="spt">精神</div><div class="v" data-k="spt">136.31</div></div>
+        </div>
+      </section>
+
+      <section class="card">
+      <h2><span class="section-icon">📋</span> <span data-i18n="pet.compare">成長模擬比較清單</span> <span class="badge" id="compareCount">0</span></h2>
+      <p class="hint" data-i18n="pet.compareHint">👆 點列設為基準；再點一次取消。表頭可排序。拖曳 ⋮⋮ 或 ▲▼ 調整順序。</p>
+      <div class="compare-wrap">
+        <table class="compare" id="compareTable">
+          <thead>
+            <tr>
+              <th data-sort="name" data-i18n="common.name">名稱</th>
+              <th data-sort="level" data-i18n="common.lv">Lv</th>
+              <th data-sort="hp">HP</th>
+              <th data-sort="mp">MP</th>
+              <th data-sort="atk" data-i18n="stat.atk">攻擊</th>
+              <th data-sort="def" data-i18n="stat.def">防禦</th>
+              <th data-sort="agi" data-i18n="stat.agi">敏捷</th>
+              <th data-sort="rec" data-i18n="stat.rec">回復</th>
+              <th data-sort="spt" data-i18n="stat.spt">精神</th>
+              <th data-i18n="pet.colPoints">檔次配點</th>
+              <th data-i18n="pet.colActions">操作</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="btn-row">
+        <button type="button" class="secondary" onclick="downloadCSV()" data-i18n="pet.downloadCsv">📥 下載 CSV</button>
+        <button type="button" class="secondary" onclick="clearList()" data-i18n="pet.clearList">🗑️ 清空列表</button>
+      </div>
+      </section>
+
+      <section class="card reverse-section" id="reverseEvalSection">
+        <h2><span class="section-icon">📊</span> <span data-i18n="pet.reverseTitle">隨機檔優劣評估</span></h2>
+        <p class="hint" data-i18n="pet.reverseHint1">輸入遊戲面板的七圍數值，反推總隨機檔並判定優劣。建議小數第 2 位（PC 版面板可查看）。</p>
+        <p class="hint" data-i18n="pet.reverseHint2">ℹ️ 反推的總隨機檔含天生與成長亂數的綜合效果（無法拆分）。同等等級下總和越高通常代表隨機運越好。</p>
+
+        <div class="reverse-params">
+          <p class="hint" style="margin:0" data-i18n="pet.reverseParamsHint">⚙️ 以下參數獨立於成長模擬，僅用於反推；選圖鑑會同步檔次與卡片，其餘設定各自記憶。</p>
+          <div class="reverse-params-row">
+            <div class="field"><label data-i18n="pet.level">📈 等級 (Lv)</label><input type="number" class="rev-param" id="revLevel" value="1" min="1" max="200"></div>
+            <div class="field">
+              <label data-i18n="pet.cardRank">🃏 卡片等級</label>
+              <select class="rev-param" id="revCardRank"><option value="0">—</option><option value="6">普卡 (+6 BP/改)</option><option value="7">銀卡 (+7 BP/改)</option><option value="8">金卡 (+8 BP/改)</option></select>
+            </div>
+            <div class="field">
+              <label data-i18n="pet.modGrade">🔧 改造次數</label>
+              <select class="rev-param" id="revModGrade"><option value="0">0 改</option><option value="1">1 改</option><option value="2">2 改</option><option value="3">3 改</option><option value="4">4 改</option><option value="5">5 改</option><option value="6">6 改</option></select>
+            </div>
+          </div>
+          <div class="hint" style="margin-top:8px"><span data-i18n="pet.revPoints">💎 配點：</span><strong id="revPointDisplay">145 / 156（剩餘 11）</strong><span id="revPointWarn" class="warn" style="display:none;margin-left:8px" data-i18n="pet.revPointWarn">⚠️ 配點超過上限</span></div>
+          <table class="stat-table rev-stat-table">
+            <thead>
+              <tr><th></th><th data-i18n="pet.statVit">體</th><th data-i18n="pet.statStr">力</th><th data-i18n="pet.statDef">強</th><th data-i18n="pet.statAgi">速</th><th data-i18n="pet.statMag">魔</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="row-label" data-i18n="pet.rowBase">原始檔次</td>
+                <td><input class="rev-base-stat rev-param" type="number" step="0.01" value="30"></td>
+                <td><input class="rev-base-stat rev-param" type="number" step="0.01" value="35"></td>
+                <td><input class="rev-base-stat rev-param" type="number" step="0.01" value="30"></td>
+                <td><input class="rev-base-stat rev-param" type="number" step="0.01" value="25"></td>
+                <td><input class="rev-base-stat rev-param" type="number" step="0.01" value="20"></td>
+              </tr>
+              <tr>
+                <td class="row-label" data-i18n="pet.rowLost">掉檔</td>
+                <td><input class="rev-lost-stat rev-param" type="number" value="0" min="0" max="4"></td>
+                <td><input class="rev-lost-stat rev-param" type="number" value="0" min="0" max="4"></td>
+                <td><input class="rev-lost-stat rev-param" type="number" value="0" min="0" max="4"></td>
+                <td><input class="rev-lost-stat rev-param" type="number" value="0" min="0" max="4"></td>
+                <td><input class="rev-lost-stat rev-param" type="number" value="0" min="0" max="4"></td>
+              </tr>
+              <tr>
+                <td class="row-label" data-i18n="pet.rowManual">配點</td>
+                <td><input class="rev-manual-point rev-param" type="number" value="0" min="0"></td>
+                <td><input class="rev-manual-point rev-param" type="number" value="0" min="0"></td>
+                <td><input class="rev-manual-point rev-param" type="number" value="0" min="0"></td>
+                <td><input class="rev-manual-point rev-param" type="number" value="0" min="0"></td>
+                <td><input class="rev-manual-point rev-param" type="number" value="0" min="0"></td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="btn-row" style="margin-top:8px">
+            <button type="button" class="secondary" onclick="maxRevStat(0)" data-i18n="pet.btnAllVit">❤️ 全體</button>
+            <button type="button" class="secondary" onclick="maxRevStat(1)" data-i18n="pet.btnAllStr">💪 全力</button>
+            <button type="button" class="secondary" onclick="maxRevStat(2)" data-i18n="pet.btnAllDef">⚔️ 全強</button>
+            <button type="button" class="secondary" onclick="maxRevStat(3)" data-i18n="pet.btnAllAgi">💨 全速</button>
+            <button type="button" class="secondary" onclick="maxRevStat(4)" data-i18n="pet.btnAllMag">✨ 全魔</button>
+          </div>
+        </div>
+
+        <div class="reverse-grid reverse-grid-stats">
+          <div class="field"><label>❤️ HP <span class="req">*</span></label><input type="number" step="0.01" id="obsHp" data-i18n-placeholder="pet.obsPh" placeholder="例：123.45" required=""></div>
+          <div class="field"><label>💧 MP <span class="req">*</span></label><input type="number" step="0.01" id="obsMp" data-i18n-placeholder="pet.obsPh" placeholder="例：123.45" required=""></div>
+          <div class="field"><label>⚔️ <span data-i18n="stat.atk">攻擊</span> <span class="req">*</span></label><input type="number" step="0.01" id="obsAtk" data-i18n-placeholder="pet.obsPh" placeholder="例：123.45" required=""></div>
+          <div class="field"><label>🛡️ <span data-i18n="stat.def">防禦</span> <span class="req">*</span></label><input type="number" step="0.01" id="obsDef" data-i18n-placeholder="pet.obsPh" placeholder="例：123.45" required=""></div>
+          <div class="field"><label>💨 <span data-i18n="stat.agi">敏捷</span> <span class="req">*</span></label><input type="number" step="0.01" id="obsAgi" data-i18n-placeholder="pet.obsPh" placeholder="例：123.45" required=""></div>
+          <div class="field"><label>💚 <span data-i18n="stat.rec">回復</span> <span class="req">*</span></label><input type="number" step="0.01" id="obsRec" data-i18n-placeholder="pet.obsPhRec" placeholder="例：100.00" required=""></div>
+          <div class="field"><label>🔮 <span data-i18n="stat.spt">精神</span> <span class="req">*</span></label><input type="number" step="0.01" id="obsSpt" data-i18n-placeholder="pet.obsPhRec" placeholder="例：100.00" required=""></div>
+        </div>
+        <div class="reverse-options">
+          <label><input type="checkbox" id="lockManualCheckbox"> <span data-i18n="pet.lockManual">配點已確認（不搜尋其他配點）</span></label>
+        </div>
+        <div class="btn-row" style="margin-top:12px">
+          <button type="button" id="reverseCalcBtn" data-i18n="pet.reverseCalcBtn">📊 評估隨機檔優劣</button>
+          <button type="button" class="secondary" id="addReverseEvalBtn" disabled="" data-i18n="pet.addReverseEval">➕ 加入評估清單</button>
+        </div>
+        <div id="reverseStatus" style="display:none"></div>
+        <div class="batch-obs-area">
+          <p class="hint" data-i18n="pet.batchHint">📋 批次貼上：每行一筆，格式 評分,HP,MP,攻,防,敏,回復,精神（評分可省略，會顯示於名稱旁）。使用上方反推參數，非成長模擬設定。</p>
+          <textarea id="batchObsInput" placeholder="4353,3036,2384,1355.70,644.56,486.00,169.10,80.74
+4342,3024,2369,1354.81,644.72,483.69,168.44,80.28"></textarea>
+          <div class="btn-row" style="margin-top:8px">
+            <button type="button" class="secondary" id="batchReverseBtn" data-i18n="pet.batchReverseBtn">📋 批次評估並加入清單</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2><span class="section-icon">📊</span> <span data-i18n="pet.reverseCompareTitle">反推評估比較清單</span> <span class="badge" id="reverseEvalCount">0</span></h2>
+        <p class="hint" data-i18n="pet.reverseCompareHint">👆 點列設為基準比較總和；表頭可排序。拖曳 ⋮⋮ 或 ▲▼ 調整順序。清單會自動儲存至瀏覽器。</p>
+        <div class="compare-wrap">
+          <table class="compare" id="reverseEvalTable">
+            <thead>
+              <tr>
+                <th data-re-sort="name" data-i18n="common.name">名稱</th>
+                <th data-re-sort="level" data-i18n="common.lv">Lv</th>
+                <th data-re-sort="quality" data-i18n="pet.revColQuality">判定</th>
+                <th data-re-sort="randSum" data-i18n="pet.revColSum">總和</th>
+                <th data-i18n="pet.revColRand">總隨機檔</th>
+                <th data-re-sort="fitErr" data-i18n="pet.revColFit">擬合</th>
+                <th data-i18n="pet.colActions">操作</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="btn-row">
+          <button type="button" class="secondary" onclick="downloadReverseEvalCSV()" data-i18n="pet.downloadCsv">📥 下載 CSV</button>
+          <button type="button" class="secondary" onclick="clearReverseEvalList()" data-i18n="pet.clearList">🗑️ 清空列表</button>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script src="./寵物成長模擬器_files/starcg_i18n.js.下載"></script>
+  <script src="./寵物成長模擬器_files/starcg_game_names.js.下載"></script>
+  <script src="./寵物成長模擬器_files/starcg_i18n_char_pet.js.下載"></script>
+  <script src="./寵物成長模擬器_files/starcg_i18n_messages.js.下載"></script>
+  <script>
+    function t(key, params) { return StarCG_I18N.t(key, params); }
+    function gn(name) { return StarCG_I18N.displayGameName(name); }
+    const PET_REPO_RAW = 'https://raw.githubusercontent.com/wodenchen/StarCG/main/';
+    function resolveDataUrl(relative) {
+      return new URL(relative, location.href).href;
+    }
+    const PETS_URLS = [
+      resolveDataUrl('pets-local.json'),
+      resolveDataUrl('pets.json'),
+      PET_REPO_RAW + 'pets-local.json',
+      PET_REPO_RAW + 'pets.json',
+    ];
+    const PET_GUIDE_JSON_URL = 'https://guide.starcg.net/data/pets.json';
+    const CORS_PROXY_PREFIXES = [
+      'https://corsproxy.io/?url=',
+      'https://api.allorigins.win/raw?url=',
+      'https://api.codetabs.com/v1/proxy/?quest=',
+    ];
+    function needsCorsProxy(url) {
+      return url.startsWith('http') && !url.includes('raw.githubusercontent.com');
+    }
+    const PET_IMAGE_BASE = 'https://guide.starcg.net/pet/';
+    const STAT_NAME_KEYS = ['pet.statVit', 'pet.statStr', 'pet.statDef', 'pet.statAgi', 'pet.statMag'];
+    function statName(i) { return t(STAT_NAME_KEYS[i]); }
+    const REV_ISSUE = { UNALLOCATED: 'unallocated', NEG_RAND: 'negativeRand', NO_DECIMAL: 'noDecimal', HPMP_INT: 'hpmpInt' };
+    const REV_ISSUE_BLOCKING = new Set([REV_ISSUE.UNALLOCATED, REV_ISSUE.NEG_RAND]);
+    const BP_INITIAL_RATE = 0.2; // 官方固定：檔次→1等BP 係數
+    const BP_TO_STAT_MATRIX = [
+      [8.0, 2.0, 3.0, 3.0, 1.0],
+      [1.0, 2.0, 2.0, 2.0, 10.0],
+      [0.2, 2.7, 0.3, 0.3, 0.2],
+      [0.2, 0.3, 3.0, 0.3, 0.2],
+      [0.1, 0.2, 0.2, 2.0, 0.1],
+    ];
+    const SPT_BP_ROW = [-0.3, -0.1, 0.2, -0.1, 0.8];
+    const REC_BP_ROW = [0.8, -0.1, -0.1, 0.2, -0.3];
+    const CORE_STAT_KEYS = ['hp', 'mp', 'atk', 'def', 'agi'];
+    const EXT_STAT_KEYS = ['rec', 'spt'];
+    const OBS_STAT_KEYS = [...CORE_STAT_KEYS, ...EXT_STAT_KEYS];
+    const OBS_STAT_LABELS = new Proxy({}, { get: (_, k) => StarCG_I18N.stat(k) });
+    const RAND_SUM_MAX = 10;
+    const RAND_STAT_MAX = 10;
+    const STAT_BASE = { hp: 20, mp: 20, atk: 20, def: 20, agi: 20, spt: 100, rec: 100 };
+    const REVERSE_EVAL_STORAGE_KEY = 'starcg_reverseEvalList';
+    const LOCK_MANUAL_STORAGE_KEY = 'starcg_lockManual';
+    const REVERSE_PARAMS_STORAGE_KEY = 'starcg_reverseParams';
+    /** 官方圖鑑勘誤 */
+    const PET_DATA_OVERRIDES = {
+      '碧藍龍舟': { cardTier: '銀' },
+    };
+
+    function formatPointsDisplay(used, limit) {
+      return t('pet.pointsFmt', { used, limit, remain: limit - used });
+    }
+
+    function refreshCardRankSelect(id) {
+      const sel = document.getElementById(id);
+      if (!sel) return;
+      const val = sel.value;
+      const opts = [
+        ['0', 'pet.cardRankNone'],
+        ['6', 'pet.cardRankBp6'],
+        ['7', 'pet.cardRankBp7'],
+        ['8', 'pet.cardRankBp8'],
+      ];
+      sel.innerHTML = opts.map(([v, key]) => `<option value="${v}">${t(key)}</option>`).join('');
+      sel.value = val;
+    }
+
+    function refreshModGradeSelect(id) {
+      const sel = document.getElementById(id);
+      if (!sel) return;
+      const val = sel.value;
+      sel.innerHTML = Array.from({ length: 7 }, (_, i) =>
+        `<option value="${i}">${t('pet.modN', { n: i })}</option>`
+      ).join('');
+      sel.value = val;
+    }
+
+    function refreshPetDropdowns() {
+      refreshCardRankSelect('cardRank');
+      refreshCardRankSelect('revCardRank');
+      refreshModGradeSelect('modGrade');
+      refreshModGradeSelect('revModGrade');
+    }
+
+    function updateMaxStarBtn() {
+      const btn = document.getElementById('maxStarBtn');
+      if (!btn) return;
+      btn.textContent = isMaxStar ? t('pet.maxStarOn') : t('pet.maxStarOff');
+      btn.classList.toggle('active', isMaxStar);
+    }
+
+    function buildAllocLabelFromArray(arr) {
+      return (arr || []).map((v, i) => v > 0 ? `${v}${statName(i)}` : '').filter(Boolean).join(' ');
+    }
+
+    function formatModText(modGrade, cardRank) {
+      if (!cardRank || cardRank <= 0) return t('pet.modNoneShort');
+      return t('pet.modNShort', { n: modGrade });
+    }
+
+    function round2(n) {
+      return Math.round((Number(n) || 0) * 100) / 100;
+    }
+
+    function fmtStat(n) {
+      const v = round2(n);
+      return v.toFixed(2).replace(/\.?0+$/, '') || '0';
+    }
+
+    let allPets = [];
+    let filteredPets = [];
+    let isMaxStar = false;
+    let comparisonList = [];
+    let basePetId = null;
+    let sortConfig = { key: 'name', order: 'asc' };
+    let dragPetId = null;
+    let reverseEvalList = [];
+    let reverseEvalBaseId = null;
+    let reverseEvalSortConfig = { key: 'randSum', order: 'desc' };
+    let dragReverseEvalId = null;
+    let lastReverseEval = null;
+    let isReversedRand = false;
+
+    function adaptPet(p) {
+      return {
+        id: p.id,
+        name: p.name,
+        race: p.race,
+        cardType: p.cardTier || '',
+        hp: p.hp || 0,
+        power: p.power || 0,
+        defense: p.defense || 0,
+        speed: p.speed || 0,
+        magic: p.magic || 0,
+        total: p.total || 0,
+        skillSlots: p.skillSlots || 0,
+        washPrice: p.washPrice || 0,
+        imageId: p.imageId != null && p.imageId !== '' ? String(p.imageId) : '',
+      };
+    }
+
+    function resolveImageId(pet) {
+      if (!pet) return null;
+      const fromPet = String(pet.imageId ?? '').match(/\d+/);
+      return fromPet ? fromPet[0] : null;
+    }
+
+    function petImageCandidates(pet) {
+      const id = resolveImageId(pet);
+      if (!id) return [];
+      return [`${PET_IMAGE_BASE}${id}.gif`];
+    }
+
+    function updatePetPortrait(pet) {
+      const box = document.getElementById('petPortraitBox');
+      const img = document.getElementById('petPortrait');
+      if (!pet) {
+        box.hidden = true;
+        img.removeAttribute('src');
+        img.onerror = null;
+        img.style.display = '';
+        box.querySelector('.pet-portrait-placeholder')?.remove();
+        return;
+      }
+      const urls = petImageCandidates(pet);
+      if (!urls.length) {
+        box.hidden = true;
+        return;
+      }
+      box.hidden = false;
+      img.style.display = '';
+      box.querySelector('.pet-portrait-placeholder')?.remove();
+      img.alt = pet.name;
+      let urlIdx = 0;
+      img.onload = () => {
+        img.style.display = '';
+        box.querySelector('.pet-portrait-placeholder')?.remove();
+      };
+      img.onerror = () => {
+        urlIdx += 1;
+        if (urlIdx < urls.length) {
+          img.src = urls[urlIdx];
+          return;
+        }
+        img.style.display = 'none';
+        if (!box.querySelector('.pet-portrait-placeholder')) {
+          const ph = document.createElement('div');
+          ph.className = 'pet-portrait-placeholder';
+          ph.textContent = t('pet.noImage');
+          box.appendChild(ph);
+        }
+      };
+      img.src = urls[0];
+    }
+
+    function cardRankFromType(cardType) {
+      if (!cardType) return 0;
+      if (cardType.includes('金')) return 8;
+      if (cardType.includes('銀')) return 7;
+      if (cardType.includes('普')) return 6;
+      return 0;
+    }
+
+    function starTarget(cardType) {
+      if (cardType.includes('金')) return 129;
+      if (cardType.includes('銀')) return 127;
+      if (cardType.includes('普')) return 125;
+      return 0;
+    }
+
+    function cardBaseTotal(cardTypeOrRank) {
+      if (typeof cardTypeOrRank === 'number') {
+        if (cardTypeOrRank === 8) return 104;
+        if (cardTypeOrRank === 7) return 102;
+        if (cardTypeOrRank === 6) return 100;
+        return 0;
+      }
+      const cardType = String(cardTypeOrRank || '');
+      if (cardType.includes('金')) return 104;
+      if (cardType.includes('銀')) return 102;
+      if (cardType.includes('普')) return 100;
+      return 0;
+    }
+
+    function cardTypeFromRank(cardRank) {
+      if (cardRank === 8) return '金';
+      if (cardRank === 7) return '銀';
+      if (cardRank === 6) return '普';
+      return '';
+    }
+
+    function findCatalogPetByName(name) {
+      return allPets.find(p => p.name === name) || null;
+    }
+
+    function computeCompareStarMeta(catalogPet, cardRank, maxStarApplied) {
+      const cardType = catalogPet?.cardType || cardTypeFromRank(cardRank);
+      const target = starTarget(cardType);
+      const base = cardBaseTotal(cardType || cardRank);
+      if (!target || !base) return { starCount: null, starText: '', starIsMax: false };
+      const maxStar = target - base;
+      const total = catalogPet?.total ?? 0;
+      if (maxStarApplied || total >= target) {
+        return { starCount: maxStar, starText: t('pet.starMax'), starIsMax: true };
+      }
+      const starCount = Math.max(0, Math.round(total - base));
+      const starIsMax = starCount >= maxStar;
+      return {
+        starCount,
+        starText: starIsMax ? t('pet.starMax') : t('pet.starN', { n: starCount }),
+        starIsMax,
+      };
+    }
+
+    function getCompareStarMeta(pet) {
+      const catalogPet = pet.catalogTotal != null
+        ? { total: pet.catalogTotal, cardType: cardTypeFromRank(pet.cardRank) }
+        : findCatalogPetByName(pet.name);
+      return computeCompareStarMeta(catalogPet, pet.cardRank, pet.maxStarApplied);
+    }
+
+    function computePetBases(pet, applyMaxStar = isMaxStar) {
+      let bases = [pet.hp, pet.power, pet.defense, pet.speed, pet.magic];
+      const target = starTarget(pet.cardType);
+      const missing = Math.max(target - (pet.total || 0), 0);
+      if (applyMaxStar && target > 0 && missing > 0) {
+        const add = missing / 5;
+        bases = bases.map(v => round2(v + add));
+      }
+      return { bases, target, missing };
+    }
+
+    function getVals(cls) {
+      return Array.from(document.querySelectorAll(cls)).map(el => Number(el.value) || 0);
+    }
+
+    function getInputs() {
+      const idx = parseInt(document.getElementById('petSelect').value, 10);
+      const catalogName = !Number.isNaN(idx) ? filteredPets[idx]?.name : '';
+      const nameInput = document.getElementById('petName').value.trim();
+      return {
+        name: nameInput || catalogName || t('common.unnamed'),
+        level: Number(document.getElementById('level').value) || 1,
+        base: getVals('.base-stat'),
+        lost: getVals('.lost-stat'),
+        rand: getVals('.rand-stat'),
+        manual: getVals('.manual-point'),
+        cardRank: Number(document.getElementById('cardRank').value) || 0,
+        modGrade: Number(document.getElementById('modGrade').value) || 0,
+      };
+    }
+
+    function getReverseInputs() {
+      const idx = parseInt(document.getElementById('petSelect').value, 10);
+      const catalogName = !Number.isNaN(idx) ? filteredPets[idx]?.name : '';
+      const nameInput = document.getElementById('petName').value.trim();
+      return {
+        name: nameInput || catalogName || t('common.unnamed'),
+        level: Number(document.getElementById('revLevel').value) || 1,
+        base: getVals('.rev-base-stat'),
+        lost: getVals('.rev-lost-stat'),
+        rand: [0, 0, 0, 0, 0],
+        manual: getVals('.rev-manual-point'),
+        cardRank: Number(document.getElementById('revCardRank').value) || 0,
+        modGrade: Number(document.getElementById('revModGrade').value) || 0,
+      };
+    }
+
+    function updateReversePointDisplay() {
+      const data = getReverseInputs();
+      const { manualCapped, totalLimit, currentUsed } = computeManualCapped(data);
+      const manualInputs = Array.from(document.querySelectorAll('.rev-manual-point'));
+      for (let i = 0; i < manualInputs.length; i++) {
+        if (manualInputs[i] && data.manual[i] !== manualCapped[i]) {
+          manualInputs[i].value = manualCapped[i];
+        }
+      }
+      const remaining = totalLimit - currentUsed;
+      document.getElementById('revPointDisplay').textContent = formatPointsDisplay(currentUsed, totalLimit);
+      document.getElementById('revPointDisplay').style.color = currentUsed > totalLimit ? 'var(--danger)' : '';
+      document.getElementById('revPointWarn').style.display = currentUsed > totalLimit ? 'inline' : 'none';
+    }
+
+    function saveReverseParams() {
+      try {
+        localStorage.setItem(REVERSE_PARAMS_STORAGE_KEY, JSON.stringify({
+          level: document.getElementById('revLevel').value,
+          cardRank: document.getElementById('revCardRank').value,
+          modGrade: document.getElementById('revModGrade').value,
+          base: getVals('.rev-base-stat'),
+          lost: getVals('.rev-lost-stat'),
+          manual: getVals('.rev-manual-point'),
+        }));
+      } catch { /* ignore */ }
+    }
+
+    function loadReverseParams() {
+      try {
+        const raw = localStorage.getItem(REVERSE_PARAMS_STORAGE_KEY);
+        if (!raw) return;
+        const p = JSON.parse(raw);
+        if (p.level != null) document.getElementById('revLevel').value = p.level;
+        if (p.cardRank != null) document.getElementById('revCardRank').value = p.cardRank;
+        if (p.modGrade != null) document.getElementById('revModGrade').value = p.modGrade;
+        if (Array.isArray(p.base)) {
+          document.querySelectorAll('.rev-base-stat').forEach((el, i) => {
+            if (p.base[i] != null) el.value = fmtStat(p.base[i]);
+          });
+        }
+        if (Array.isArray(p.lost)) {
+          document.querySelectorAll('.rev-lost-stat').forEach((el, i) => {
+            if (p.lost[i] != null) el.value = p.lost[i];
+          });
+        }
+        if (Array.isArray(p.manual)) {
+          document.querySelectorAll('.rev-manual-point').forEach((el, i) => {
+            if (p.manual[i] != null) el.value = p.manual[i];
+          });
+        }
+      } catch { /* ignore */ }
+      updateReversePointDisplay();
+    }
+
+    function applyPetToReverseParams(pet) {
+      if (!pet) return;
+      const { bases } = computePetBases(pet);
+      document.querySelectorAll('.rev-base-stat').forEach((input, i) => { input.value = fmtStat(bases[i]); });
+      document.querySelectorAll('.rev-lost-stat').forEach(input => { input.value = 0; });
+      document.getElementById('revCardRank').value = String(cardRankFromType(pet.cardType));
+      updateReversePointDisplay();
+      saveReverseParams();
+    }
+
+    function computeManualCapped(data) {
+      const lvlLimit = Math.max(0, data.level - 1);
+      const modLimit = data.cardRank * data.modGrade;
+      const totalLimit = lvlLimit + modLimit;
+      const ranks = data.base.map((rank, i) => rank - Math.abs(data.lost[i]));
+
+      const bpBase = ranks.map((realRank, i) => {
+        const bpLv1 = (realRank * BP_INITIAL_RATE) + (data.rand[i] * BP_INITIAL_RATE);
+        const bpGrowth = realRank / 24;
+        return bpLv1 + bpGrowth * (data.level - 1);
+      });
+
+      const perStatMaxBP = bpBase.map((bpI, i) => {
+        let sumOthers = 0;
+        for (let j = 0; j < bpBase.length; j++) {
+          if (j !== i) sumOthers += bpBase[j] + (data.manual[j] || 0);
+        }
+        return Math.max(0, Math.floor(sumOthers - bpI));
+      });
+
+      let manualCapped = data.manual.map((v, i) => Math.min(v, perStatMaxBP[i]));
+      let currentUsed = manualCapped.reduce((a, b) => a + b, 0);
+
+      if (currentUsed > totalLimit) {
+        let runningSum = 0;
+        manualCapped = manualCapped.map((v) => {
+          const available = Math.max(0, totalLimit - runningSum);
+          const capped = Math.min(v, available);
+          runningSum += capped;
+          return capped;
+        });
+        currentUsed = runningSum;
+      }
+
+      return { ranks, bpBase, manualCapped, perStatMaxBP, totalLimit, currentUsed };
+    }
+
+    function statsFromBP(bp) {
+      const statKeys = ['hp', 'mp', 'atk', 'def', 'agi'];
+      const stats = {};
+      for (let s = 0; s < 5; s++) {
+        let v = STAT_BASE[statKeys[s]];
+        for (let j = 0; j < 5; j++) v += bp[j] * BP_TO_STAT_MATRIX[s][j];
+        stats[statKeys[s]] = round2(v);
+      }
+      stats.spt = round2(100 + bp[0] * SPT_BP_ROW[0] + bp[1] * SPT_BP_ROW[1] + bp[2] * SPT_BP_ROW[2] + bp[3] * SPT_BP_ROW[3] + bp[4] * SPT_BP_ROW[4]);
+      stats.rec = round2(100 + bp[0] * REC_BP_ROW[0] + bp[1] * REC_BP_ROW[1] + bp[2] * REC_BP_ROW[2] + bp[3] * REC_BP_ROW[3] + bp[4] * REC_BP_ROW[4]);
+      return stats;
+    }
+
+    function isStatInteger(v) {
+      return Math.abs(v - Math.round(v)) < 1e-6;
+    }
+
+    function observedHasDecimals(observed, keys = CORE_STAT_KEYS) {
+      return keys.some(k => observed[k] != null && !isStatInteger(observed[k]));
+    }
+
+    function statRhs(observedVal, baseKey, bias) {
+      const b = isStatInteger(observedVal) ? bias : 0;
+      return observedVal - STAT_BASE[baseKey] + b;
+    }
+
+    function solveLinearSystem5(A, b) {
+      const n = 5;
+      const M = A.map((row, i) => [...row, b[i]]);
+
+      for (let col = 0; col < n; col++) {
+        let pivot = col;
+        for (let row = col + 1; row < n; row++) {
+          if (Math.abs(M[row][col]) > Math.abs(M[pivot][col])) pivot = row;
+        }
+        if (Math.abs(M[pivot][col]) < 1e-9) throw new Error('矩陣奇異，無法反解');
+        [M[col], M[pivot]] = [M[pivot], M[col]];
+
+        for (let row = col + 1; row < n; row++) {
+          const factor = M[row][col] / M[col][col];
+          for (let j = col; j <= n; j++) M[row][j] -= factor * M[col][j];
+        }
+      }
+
+      const x = new Array(n);
+      for (let row = n - 1; row >= 0; row--) {
+        let sum = M[row][n];
+        for (let j = row + 1; j < n; j++) sum -= M[row][j] * x[j];
+        x[row] = sum / M[row][row];
+      }
+      return x;
+    }
+
+    function solveBPFromObserved(observed, bias = 0) {
+      const rhs = CORE_STAT_KEYS.map(k => statRhs(observed[k] || 0, k, bias));
+      return solveLinearSystem5(BP_TO_STAT_MATRIX, rhs);
+    }
+
+    /** 有精神/回復時用加權最小平方法（7 方程 5 未知），對齊官方小數精度 */
+    function solveBPWeighted(observed, bias = 0) {
+      const rows = [];
+      const rhs = [];
+      const weights = [];
+
+      CORE_STAT_KEYS.forEach((k, i) => {
+        rows.push(BP_TO_STAT_MATRIX[i]);
+        rhs.push(statRhs(observed[k], k, bias));
+        weights.push(1);
+      });
+      if (observed.spt != null) {
+        rows.push(SPT_BP_ROW);
+        rhs.push(statRhs(observed.spt, 'spt', bias));
+        weights.push(1.4);
+      }
+      if (observed.rec != null) {
+        rows.push(REC_BP_ROW);
+        rhs.push(statRhs(observed.rec, 'rec', bias));
+        weights.push(1.4);
+      }
+
+      const ata = Array.from({ length: 5 }, () => Array(5).fill(0));
+      const atb = Array(5).fill(0);
+      for (let r = 0; r < rows.length; r++) {
+        const w = weights[r];
+        for (let i = 0; i < 5; i++) {
+          for (let j = 0; j < 5; j++) ata[i][j] += w * rows[r][i] * rows[r][j];
+          atb[i] += w * rows[r][i] * rhs[r];
+        }
+      }
+      return solveLinearSystem5(ata, atb);
+    }
+
+    function solveBPVariants(observed) {
+      const hasExtra = observed.spt != null || observed.rec != null;
+      const hasDec = observedHasDecimals(observed, [...CORE_STAT_KEYS, ...EXT_STAT_KEYS]);
+      const biases = hasDec ? [0] : [0, 0.25, 0.5, 0.75];
+      return biases.map(bias => ({
+        bias,
+        bp: hasExtra ? solveBPWeighted(observed, bias) : solveBPFromObserved(observed, bias),
+      }));
+    }
+
+    function statMatchError(observedVal, statVal) {
+      if (observedVal == null) return 0;
+      const diff = round2(observedVal) - round2(statVal);
+      let err = diff * diff * 100;
+      if (isStatInteger(observedVal)) {
+        const floorDiff = Math.floor(observedVal) - Math.floor(statVal);
+        err += floorDiff * floorDiff * 20;
+      }
+      return err;
+    }
+
+    function bpToRand(bp, ranks, level, manual) {
+      return bp.map((bpi, i) => {
+        const realRank = ranks[i];
+        const base = (realRank * BP_INITIAL_RATE) + (realRank / 24) * (level - 1);
+        return Math.round((bpi - manual[i] - base) / BP_INITIAL_RATE);
+      });
+    }
+
+    function clearObservedInputs() {
+      ['obsHp', 'obsMp', 'obsAtk', 'obsDef', 'obsAgi', 'obsRec', 'obsSpt'].forEach(id => {
+        document.getElementById(id).value = '';
+      });
+      const statusEl = document.getElementById('reverseStatus');
+      statusEl.style.display = 'none';
+      statusEl.textContent = '';
+      statusEl.className = '';
+      statusEl.innerHTML = '';
+      lastReverseEval = null;
+      document.getElementById('addReverseEvalBtn').disabled = true;
+    }
+
+    function getObservedInputs() {
+      const num = id => {
+        const v = document.getElementById(id).value;
+        return v === '' ? null : Number(v);
+      };
+      return {
+        hp: num('obsHp'), mp: num('obsMp'), atk: num('obsAtk'),
+        def: num('obsDef'), agi: num('obsAgi'),
+        spt: num('obsSpt'), rec: num('obsRec'),
+      };
+    }
+
+    function isInnateRandValid(rand) {
+      const sum = rand.reduce((a, b) => a + b, 0);
+      if (sum > RAND_SUM_MAX) return false;
+      return rand.every(r => r >= 0 && r <= RAND_STAT_MAX);
+    }
+
+    /** Lv1 參考中位：天生滿檔約 10 */
+    function expectedTotalRandMid(level) {
+      if (level <= 1) return RAND_SUM_MAX * 0.5;
+      return RAND_SUM_MAX + (level - 1) * 0.12;
+    }
+
+    function randQualityInfo(sum, level = 1) {
+      if (level <= 1) {
+        if (sum >= RAND_SUM_MAX) {
+          return { label: t('pet.qLabelExcellent'), title: t('pet.qTitleFullRand'), tier: 'excellent', emoji: '🌟', desc: t('pet.qDescFull', { sum, max: RAND_SUM_MAX }) };
+        }
+        if (sum >= 8) {
+          return { label: t('pet.qLabelGood'), title: t('pet.qTitleExcellent'), tier: 'good', emoji: '✨', desc: t('pet.qDescGood', { sum, max: RAND_SUM_MAX }) };
+        }
+        if (sum >= 6) {
+          return { label: t('pet.qLabelFair'), title: t('pet.qTitleFair'), tier: 'fair', emoji: '➖', desc: t('pet.qDescFair', { sum, max: RAND_SUM_MAX }) };
+        }
+        return { label: t('pet.qLabelPoor'), title: t('pet.qTitlePoor'), tier: 'poor', emoji: '⚠️', desc: t('pet.qDescPoor', { sum, max: RAND_SUM_MAX }) };
+      }
+
+      const mid = expectedTotalRandMid(level);
+      const diff = sum - mid;
+      if (diff >= 3) {
+        return { label: t('pet.qLabelExcellent'), title: t('pet.qTitleRandGood'), tier: 'excellent', emoji: '🌟', desc: t('pet.qDescHigh', { sum, level, mid: round2(mid) }) };
+      }
+      if (diff >= 0) {
+        return { label: t('pet.qLabelGood'), title: t('pet.qTitlePrefer'), tier: 'good', emoji: '✨', desc: t('pet.qDescAbove', { sum, level, mid: round2(mid) }) };
+      }
+      if (diff >= -3) {
+        return { label: t('pet.qLabelFair'), title: t('pet.qTitleFair'), tier: 'fair', emoji: '➖', desc: t('pet.qDescNear', { sum, level, mid: round2(mid) }) };
+      }
+      return { label: t('pet.qLabelPoor'), title: t('pet.qTitleDeviate'), tier: 'poor', emoji: '⚠️', desc: t('pet.qDescLow', { sum, level, mid: round2(mid) }) };
+    }
+
+    function randQualityLabel(sum, level = 1) {
+      return randQualityInfo(sum, level).title;
+    }
+
+    function formatRandBreakdown(rand) {
+      return rand.map((v, i) => `${statName(i)}${v}`).join(' · ');
+    }
+
+    function fitToleranceForLevel(level) {
+      if (level <= 1) return { good: 0.05, ok: 0.15, warn: 0.5 };
+      if (level <= 50) return { good: 0.3, ok: 0.5, warn: 2.0 };
+      return { good: 0.65, ok: 1.5, warn: 3.0 };
+    }
+
+    function computeFitMetrics(observed, stats) {
+      let maxFitErr = 0;
+      let worstKey = '';
+      let worstDiff = 0;
+      const diffs = [];
+      for (const k of OBS_STAT_KEYS) {
+        if (observed[k] == null) continue;
+        const d = round2(observed[k] - stats[k]);
+        const ad = Math.abs(d);
+        if (ad >= 0.01) diffs.push({ k, d, ad });
+        if (ad > maxFitErr) {
+          maxFitErr = ad;
+          worstKey = k;
+          worstDiff = d;
+        }
+      }
+      return { maxFitErr: round2(maxFitErr), worstKey, worstDiff: round2(worstDiff), diffs };
+    }
+
+    function assessReverseConfidence(solvedData, observed, result) {
+      const issueKeys = [];
+      const { totalLimit, currentUsed } = computeManualCapped(solvedData);
+      if (totalLimit - currentUsed > 0) issueKeys.push(REV_ISSUE.UNALLOCATED);
+
+      const { maxFitErr, worstKey, worstDiff } = computeFitMetrics(observed, result.stats);
+      const tol = fitToleranceForLevel(solvedData.level);
+      const hasNegativeRand = result.rand.some(r => r < 0);
+      if (hasNegativeRand) issueKeys.push(REV_ISSUE.NEG_RAND);
+      if (!observedHasDecimals(observed, OBS_STAT_KEYS)) {
+        issueKeys.push(REV_ISSUE.NO_DECIMAL);
+      }
+      if ((isStatInteger(observed.hp) || isStatInteger(observed.mp))
+        && observedHasDecimals(observed, ['atk', 'def', 'agi', 'rec', 'spt'])) {
+        issueKeys.push(REV_ISSUE.HPMP_INT);
+      }
+
+      const blockingIssues = issueKeys.filter(k => REV_ISSUE_BLOCKING.has(k));
+      const issues = issueKeys.map(k => t('pet.issue.' + k));
+
+      let level = 'low';
+      let msgKey = 'pet.confLow';
+
+      if (hasNegativeRand || maxFitErr > tol.warn) {
+        level = 'low';
+        msgKey = 'pet.confLow';
+      } else if (maxFitErr <= tol.good && blockingIssues.length === 0) {
+        level = 'high';
+        msgKey = 'pet.confHigh';
+      } else if (maxFitErr <= tol.ok) {
+        level = 'medium';
+        msgKey = solvedData.level > 50 ? 'pet.confMediumHigh' : 'pet.confMedium';
+      } else {
+        level = 'medium';
+        msgKey = 'pet.confMediumLow';
+      }
+
+      return {
+        level,
+        text: t(msgKey),
+        msgKey,
+        issues,
+        issueKeys,
+        maxFitErr,
+        worstKey,
+        worstDiff,
+        worstLabel: worstKey ? OBS_STAT_LABELS[worstKey] : '',
+      };
+    }
+
+    function generateManualCandidates(manualCapped, totalLimit) {
+      const used = manualCapped.reduce((a, b) => a + b, 0);
+      const remaining = totalLimit - used;
+      const seen = new Set();
+      const list = [];
+      const add = (trial) => {
+        const k = trial.join(',');
+        if (seen.has(k)) return;
+        seen.add(k);
+        list.push(trial);
+      };
+
+      add([...manualCapped]);
+      for (let i = 0; i < 5; i++) {
+        if (manualCapped[i] > 0) {
+          for (let sub = 1; sub <= Math.min(5, manualCapped[i]); sub++) {
+            const t = [...manualCapped];
+            t[i] -= sub;
+            add(t);
+          }
+        }
+        if (remaining > 0) {
+          for (let extra = 1; extra <= Math.min(remaining, 8); extra++) {
+            const t = [...manualCapped];
+            t[i] += extra;
+            if (t.reduce((a, b) => a + b, 0) <= totalLimit) add(t);
+          }
+        }
+      }
+      return list;
+    }
+
+    function resolveManualForRand(data, manualGuess, rand) {
+      return computeManualCapped({ ...data, rand, manual: manualGuess }).manualCapped;
+    }
+
+    function refineRandBySearch(data, manual, observed, rand0) {
+      let rand = rand0.map(r => Math.max(0, r));
+      let bestScore = scoreReverseCandidate(data, manual, observed, rand).score;
+      const radius = data.level > 100 ? 2 : 1;
+      const deltas = [];
+      for (let d = 1; d <= radius; d++) deltas.push(-d, d);
+      let improved = true;
+      while (improved) {
+        improved = false;
+        for (let i = 0; i < 5; i++) {
+          for (const d of deltas) {
+            const trial = rand.slice();
+            trial[i] += d;
+            if (trial[i] < 0) continue;
+            const r = scoreReverseCandidate(data, manual, observed, trial);
+            if (r.score < bestScore) {
+              bestScore = r.score;
+              rand = trial;
+              improved = true;
+            }
+          }
+        }
+      }
+      return rand;
+    }
+
+    function reverseOnce(data, observed, manualGuess, ranks, level) {
+      let best = null;
+
+      for (const { bp } of solveBPVariants(observed)) {
+        let manual = manualGuess.slice();
+        let rand = bpToRand(bp, ranks, level, manual);
+        rand = refineRandBySearch(data, manual, observed, rand);
+
+        for (let iter = 0; iter < 5; iter++) {
+          const nextManual = resolveManualForRand(data, manualGuess, rand);
+          const nextRand = bpToRand(bp, ranks, level, nextManual);
+          const refined = refineRandBySearch(data, nextManual, observed, nextRand);
+          const stable = refined.every((v, i) => v === rand[i])
+            && nextManual.every((v, i) => v === manual[i]);
+          rand = refined;
+          manual = nextManual;
+          if (stable) break;
+        }
+
+        const result = scoreReverseCandidate(data, manual, observed, rand);
+        if (!best || result.score < best.score) {
+          best = { rand, manual, bp, ...result };
+        }
+      }
+
+      return best;
+    }
+
+    function scoreReverseCandidate(data, manualTrial, observed, rand) {
+      const { ranks } = computeManualCapped({ ...data, rand, manual: manualTrial });
+      const bp = ranks.map((realRank, i) => {
+        const bpLv1 = (realRank * BP_INITIAL_RATE) + (rand[i] * BP_INITIAL_RATE);
+        const bpGrowth = realRank / 24;
+        return bpLv1 + bpGrowth * (data.level - 1) + manualTrial[i];
+      });
+      const stats = statsFromBP(bp);
+
+      let err = 0;
+      for (const k of CORE_STAT_KEYS) {
+        err += statMatchError(observed[k], stats[k]);
+      }
+      err += statMatchError(observed.spt, stats.spt) * 0.8;
+      err += statMatchError(observed.rec, stats.rec) * 0.8;
+
+      const sum = rand.reduce((a, b) => a + b, 0);
+      let penalty = 0;
+      if (data.level <= 1) {
+        if (sum > RAND_SUM_MAX) penalty += (sum - RAND_SUM_MAX) * 10;
+        for (const r of rand) {
+          if (r > RAND_STAT_MAX) penalty += (r - RAND_STAT_MAX) * 10;
+        }
+      }
+      for (const r of rand) {
+        if (r < 0) penalty += Math.abs(r) * 20;
+      }
+
+      return { score: err + penalty, err, sum, stats };
+    }
+
+    let lastReverseDisplay = null;
+
+    function showReverseStatus(best, solvedData, observed, confidence) {
+      const el = document.getElementById('reverseStatus');
+      const level = solvedData.level;
+      const quality = randQualityInfo(best.sum, level);
+      const tierClass = confidence.level === 'low' ? 'tier-uncertain' : `tier-${quality.tier}`;
+      const sumSuffix = level <= 1 ? ` / ${RAND_SUM_MAX}` : ` (${t('pet.totalSum')} Lv${level})`;
+
+      const diffs = [];
+      for (const k of OBS_STAT_KEYS) {
+        const obs = observed[k];
+        if (obs == null) continue;
+        const d = round2(obs - best.stats[k]);
+        if (Math.abs(d) >= 0.01) {
+          diffs.push(`${OBS_STAT_LABELS[k]} ${d >= 0 ? '+' : ''}${d.toFixed(2)}`);
+        }
+      }
+
+      const worstPart = confidence.worstLabel
+        ? t('pet.maxFitWorst', {
+          label: confidence.worstLabel,
+          sign: confidence.worstDiff >= 0 ? '+' : '',
+          diff: confidence.worstDiff,
+        })
+        : '';
+      const fitSummary = confidence.maxFitErr > 0
+        ? t('pet.maxFitErr', { err: confidence.maxFitErr, worst: worstPart })
+        : t('pet.sevenStatMatch');
+
+      el.style.display = 'block';
+      el.className = 'rand-quality-result';
+      el.innerHTML = [
+        `<div class="rand-quality-badge ${tierClass}">${quality.emoji} ${t('pet.qualityVerdict')}<strong>${quality.label}</strong>（${quality.title}）</div>`,
+        `<div class="rand-breakdown">${t('pet.totalRand')}${formatRandBreakdown(best.rand)}｜${t('pet.totalSum')} <strong>${best.sum}</strong>${sumSuffix}</div>`,
+        `<div class="hint">${quality.desc}</div>`,
+        diffs.length ? `<div class="hint">${t('pet.fitError')}${diffs.join('、')}</div>` : `<div class="hint">${t('pet.fitMatchOk')}</div>`,
+        `<div class="hint">${fitSummary}</div>`,
+        `<span class="confidence-tag ${confidence.level}">${confidence.text}</span>`,
+        confidence.issues.length ? `<div class="hint" style="margin-top:8px">${confidence.issues.map(i => `⚠️ ${i}`).join('<br>')}</div>` : '',
+        best.manualHint ? `<div class="hint">${best.manualHint}</div>` : '',
+      ].filter(Boolean).join('');
+      lastReverseDisplay = { best, solvedData, observed, confidence };
+    }
+
+    function runReverseEval(data, observed, { lockManual = false } = {}) {
+      const filled = {
+        hp: observed.hp, mp: observed.mp, atk: observed.atk,
+        def: observed.def, agi: observed.agi,
+        spt: observed.spt, rec: observed.rec,
+      };
+      const { manualCapped, totalLimit } = computeManualCapped(data);
+      const ranks = data.base.map((rank, i) => rank - Math.abs(data.lost[i]));
+      const manualCandidates = lockManual
+        ? [manualCapped.slice()]
+        : generateManualCandidates(manualCapped, totalLimit);
+      let best = null;
+
+      for (const manualGuess of manualCandidates) {
+        try {
+          const solved = reverseOnce(data, filled, manualGuess, ranks, data.level);
+          if (!solved) continue;
+          const { rand, manual } = solved;
+          const result = scoreReverseCandidate(data, manual, filled, rand);
+          if (!best || result.score < best.score) {
+            const hint = manual.some((v, i) => v !== manualCapped[i])
+              ? t('pet.manualHint', {
+                alloc: manual.map((v, i) => v > 0 ? `${v}${statName(i)}` : '').filter(Boolean).join(' ') || t('pet.manualAllZero'),
+              })
+              : '';
+            best = { rand, manualTrial: manual, manualHint: hint, ...result };
+          }
+        } catch {
+          continue;
+        }
+      }
+      return best ? { best, filled } : null;
+    }
+
+    function buildReverseEvalEntry(data, filled, best, gameScore = null) {
+      const solvedData = { ...data, rand: best.rand, manual: best.manualTrial };
+      const quality = randQualityInfo(best.sum, data.level);
+      const confidence = assessReverseConfidence(solvedData, filled, best);
+      const evalManualCapped = computeManualCapped(solvedData).manualCapped;
+      return {
+        name: data.name,
+        level: data.level,
+        gameScore: gameScore != null && gameScore !== '' ? Number(gameScore) : null,
+        rand: [...best.rand],
+        randSum: best.sum,
+        randBreakdown: formatRandBreakdown(best.rand),
+        qualityLabel: quality.label,
+        qualityTitle: quality.title,
+        qualityTier: quality.tier,
+        confidenceLevel: confidence.level,
+        confidenceText: confidence.text,
+        confidenceMsgKey: confidence.msgKey,
+        fitErr: confidence.maxFitErr,
+        fitWorstLabel: confidence.worstLabel,
+        fitWorstDiff: confidence.worstDiff,
+        lostLabel: data.lost.map((v, i) => v !== 0 ? `${v}${statName(i)}` : '').filter(Boolean).join(' '),
+        allocLabel: buildAllocLabelFromArray(evalManualCapped),
+        lost: [...data.lost],
+        alloc: [...evalManualCapped],
+      };
+    }
+
+    function doReverseCalc() {
+      const data = getReverseInputs();
+      const observed = getObservedInputs();
+      const statusEl = document.getElementById('reverseStatus');
+      lastReverseEval = null;
+      lastReverseDisplay = null;
+      document.getElementById('addReverseEvalBtn').disabled = true;
+
+      const missing = OBS_STAT_KEYS.filter(k => observed[k] == null);
+      if (missing.length) {
+        statusEl.style.display = 'block';
+        statusEl.className = 'hint';
+        statusEl.textContent = t('pet.reverseMissing', {
+          stats: missing.map(k => OBS_STAT_LABELS[k]).join('、'),
+        });
+        lastReverseDisplay = null;
+        return;
+      }
+
+      const lockManual = document.getElementById('lockManualCheckbox').checked;
+      const result = runReverseEval(data, observed, { lockManual });
+      if (!result) {
+        statusEl.style.display = 'block';
+        statusEl.className = 'hint';
+        statusEl.textContent = t('pet.reverseFailed');
+        lastReverseDisplay = null;
+        return;
+      }
+
+      const { best, filled } = result;
+      const solvedData = { ...data, rand: best.rand, manual: best.manualTrial };
+      const confidence = assessReverseConfidence(solvedData, filled, best);
+
+      showReverseStatus(best, solvedData, filled, confidence);
+
+      lastReverseEval = buildReverseEvalEntry({ ...data, manual: best.manualTrial }, filled, best);
+      document.getElementById('addReverseEvalBtn').disabled = false;
+
+      const { totalLimit, currentUsed } = computeManualCapped(solvedData);
+      if (totalLimit - currentUsed > 0 && !lockManual) {
+        document.getElementById('revPointWarn').style.display = 'inline';
+      }
+    }
+
+    function calculateStats(data, syncManual = true) {
+      const { ranks, manualCapped, perStatMaxBP, totalLimit, currentUsed } = computeManualCapped(data);
+      const manualInputs = Array.from(document.querySelectorAll('.manual-point'));
+      const remaining = totalLimit - currentUsed;
+      const randSum = data.rand.reduce((a, b) => a + b, 0);
+
+      document.getElementById('randDisplay').textContent = randSum;
+      const suffixEl = document.getElementById('randDisplaySuffix');
+      const randWarn = document.getElementById('randWarn');
+      const q = randQualityInfo(randSum, data.level);
+      if (isReversedRand) {
+        suffixEl.textContent = data.level <= 1 ? ` / ${RAND_SUM_MAX}` : t('pet.randLvSuffix', { level: data.level });
+        randWarn.textContent = t('pet.randEvalOk', {
+          label: q.label,
+          title: q.title,
+          sum: randSum,
+          suffix: data.level <= 1 ? `/${RAND_SUM_MAX}` : '',
+        });
+        randWarn.style.display = 'inline';
+      } else {
+        suffixEl.textContent = ` / ${RAND_SUM_MAX}`;
+        randWarn.textContent = !isInnateRandValid(data.rand) ? t('pet.randOver10') : '';
+        randWarn.style.display = !isInnateRandValid(data.rand) ? 'inline' : 'none';
+      }
+
+      const pointDisplay = document.getElementById('pointDisplay');
+      pointDisplay.textContent = formatPointsDisplay(currentUsed, totalLimit);
+      pointDisplay.style.color = currentUsed > totalLimit ? 'var(--danger)' : '';
+      document.getElementById('pointWarn').style.display = currentUsed > totalLimit ? 'inline' : 'none';
+
+      const overs = [];
+      for (let i = 0; i < manualCapped.length; i++) {
+        if (data.manual[i] >= perStatMaxBP[i] && perStatMaxBP[i] >= 0) {
+          overs.push(t('pet.statCap', { stat: statName(i), cap: perStatMaxBP[i] }));
+        }
+      }
+      const manualWarn = document.getElementById('manualWarn');
+      if (overs.length) {
+        manualWarn.style.display = 'inline';
+        manualWarn.textContent = overs.join('、');
+      } else {
+        manualWarn.style.display = 'none';
+        manualWarn.textContent = '';
+      }
+
+      if (syncManual) {
+        for (let i = 0; i < manualInputs.length; i++) {
+          if (manualInputs[i] && data.manual[i] !== manualCapped[i]) {
+            manualInputs[i].value = manualCapped[i];
+          }
+        }
+      }
+
+      const bp = ranks.map((realRank, i) => {
+        const bpLv1 = (realRank * BP_INITIAL_RATE) + (data.rand[i] * BP_INITIAL_RATE);
+        const bpGrowth = realRank / 24;
+        return bpLv1 + bpGrowth * (data.level - 1) + manualCapped[i];
+      });
+
+      const stats = statsFromBP(bp);
+      return { stats, manualCapped, totalLimit, currentUsed };
+    }
+
+    function calculateCurrent() {
+      const data = getInputs();
+      const { stats } = calculateStats(data);
+      document.querySelectorAll('#preview .v').forEach(el => {
+        const k = el.dataset.k;
+        el.textContent = fmtStat(stats[k]);
+      });
+    }
+
+    function maxStat(idx) {
+      document.querySelectorAll('.manual-point').forEach((input, i) => {
+        input.value = i === idx ? 9999 : 0;
+      });
+      calculateCurrent();
+    }
+
+    function maxRevStat(idx) {
+      document.querySelectorAll('.rev-manual-point').forEach((input, i) => {
+        input.value = i === idx ? 9999 : 0;
+      });
+      updateReversePointDisplay();
+      saveReverseParams();
+    }
+
+    function populateFilters() {
+      const races = [...new Set(allPets.map(p => p.race).filter(Boolean))].sort();
+      document.getElementById('raceFilter').innerHTML =
+        `<option value="">${t('common.all')}</option>` + races.map(r => `<option value="${r}">${StarCG_I18N.displayRace(r)}</option>`).join('');
+    }
+
+    function populatePetSelect() {
+      const race = document.getElementById('raceFilter').value;
+      const card = document.getElementById('cardFilter').value;
+
+      filteredPets = allPets.filter(p => {
+        if (race && p.race !== race) return false;
+        if (card && !(p.cardType || '').includes(card)) return false;
+        return true;
+      });
+
+      const sel = document.getElementById('petSelect');
+      const prevIdx = parseInt(sel.value, 10);
+      sel.innerHTML = `<option value="">${t('pet.pleaseSelect')}</option>` +
+        filteredPets.map((p, i) => `<option value="${i}">${escapeHtml(gn(p.name))}${t('pet.catalogSuffix', { cardType: StarCG_I18N.displayCardTier(p.cardType), total: p.total })}</option>`).join('');
+      if (!Number.isNaN(prevIdx) && prevIdx < filteredPets.length) {
+        sel.value = String(prevIdx);
+        updatePetPortrait(filteredPets[prevIdx]);
+      } else {
+        sel.value = '';
+        updatePetPortrait(null);
+      }
+    }
+
+    function applyPetToInputs(pet) {
+      if (!pet) return;
+      isReversedRand = false;
+      clearObservedInputs();
+      document.getElementById('petName').value = pet.name;
+      document.getElementById('cardRank').value = String(cardRankFromType(pet.cardType));
+
+      const { bases, target, missing } = computePetBases(pet);
+
+      document.querySelectorAll('.base-stat').forEach((input, i) => { input.value = fmtStat(bases[i]); });
+      document.querySelectorAll('.lost-stat').forEach(input => { input.value = 0; });
+      document.querySelectorAll('.rand-stat').forEach(input => { input.value = 2; });
+
+      const starStatus = document.getElementById('starStatus');
+      if (target > 0) {
+        starStatus.style.display = 'block';
+        if (missing === 0 || isMaxStar) {
+          starStatus.className = 'hint status ok';
+          starStatus.textContent = t('pet.starBornMax');
+        } else {
+          starStatus.className = 'hint status err';
+          starStatus.textContent = t('pet.starMissing', { missing }) + (isMaxStar ? '' : t('pet.starMissingHint'));
+        }
+      } else {
+        starStatus.style.display = 'none';
+      }
+
+      calculateCurrent();
+      updatePetPortrait(pet);
+      applyPetToReverseParams(pet);
+    }
+
+    function saveReverseEvalList() {
+      try {
+        localStorage.setItem(REVERSE_EVAL_STORAGE_KEY, JSON.stringify(reverseEvalList));
+      } catch { /* ignore quota */ }
+    }
+
+    function loadReverseEvalList() {
+      try {
+        const raw = localStorage.getItem(REVERSE_EVAL_STORAGE_KEY);
+        if (!raw) return;
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) reverseEvalList = parsed;
+      } catch { /* ignore corrupt data */ }
+    }
+
+    function saveLockManualPref() {
+      try {
+        localStorage.setItem(LOCK_MANUAL_STORAGE_KEY, document.getElementById('lockManualCheckbox').checked ? '1' : '0');
+      } catch { /* ignore */ }
+    }
+
+    function loadLockManualPref() {
+      try {
+        const v = localStorage.getItem(LOCK_MANUAL_STORAGE_KEY);
+        if (v != null) document.getElementById('lockManualCheckbox').checked = v === '1';
+      } catch { /* ignore */ }
+    }
+
+    function addToReverseEvalList() {
+      if (!lastReverseEval) return;
+      reverseEvalList.push({
+        id: Date.now() + Math.random(),
+        ...lastReverseEval,
+      });
+      saveReverseEvalList();
+      renderReverseEvalComparison();
+    }
+
+    function batchReverseEval() {
+      const text = document.getElementById('batchObsInput').value.trim();
+      if (!text) {
+        alert(t('pet.batchNoData'));
+        return;
+      }
+      const data = getReverseInputs();
+      const lockManual = document.getElementById('lockManualCheckbox').checked;
+      const lines = text.split(/\n/).map(l => l.trim()).filter(Boolean);
+      let added = 0;
+      let skipped = 0;
+
+      for (const line of lines) {
+        const parts = line.split(/[,\s\t]+/).map(s => s.trim()).filter(Boolean).map(Number);
+        if (parts.some(n => Number.isNaN(n))) { skipped++; continue; }
+        let gameScore = null;
+        let obsValues;
+        if (parts.length === 8) {
+          [gameScore, ...obsValues] = parts;
+        } else if (parts.length === 7) {
+          obsValues = parts;
+        } else {
+          skipped++;
+          continue;
+        }
+        const observed = Object.fromEntries(OBS_STAT_KEYS.map((k, i) => [k, obsValues[i]]));
+        const result = runReverseEval(data, observed, { lockManual });
+        if (!result) { skipped++; continue; }
+        reverseEvalList.push({
+          id: Date.now() + Math.random() + added,
+          ...buildReverseEvalEntry(
+            lines.length > 1 ? { ...data, name: `${data.name} ${added + 1}` } : data,
+            result.filled,
+            result.best,
+            gameScore,
+          ),
+        });
+        added++;
+      }
+
+      if (added > 0) {
+        saveReverseEvalList();
+        renderReverseEvalComparison();
+      }
+      alert(added > 0
+        ? t('pet.batchAdded', { added }) + (skipped ? t('pet.batchSkipped', { skipped }) : '')
+        : t('pet.batchNoValid', { skipped }));
+    }
+
+    function moveReverseEvalItem(id, direction) {
+      const idx = reverseEvalList.findIndex(p => p.id === id);
+      if (idx < 0) return;
+      const newIdx = idx + direction;
+      if (newIdx < 0 || newIdx >= reverseEvalList.length) return;
+      const [item] = reverseEvalList.splice(idx, 1);
+      reverseEvalList.splice(newIdx, 0, item);
+      saveReverseEvalList();
+      renderReverseEvalComparison();
+    }
+
+    function reorderReverseEvalById(fromId, toId) {
+      const fromIdx = reverseEvalList.findIndex(p => p.id === fromId);
+      let toIdx = reverseEvalList.findIndex(p => p.id === toId);
+      if (fromIdx < 0 || toIdx < 0 || fromIdx === toIdx) return;
+      const [item] = reverseEvalList.splice(fromIdx, 1);
+      if (fromIdx < toIdx) toIdx--;
+      reverseEvalList.splice(toIdx, 0, item);
+      saveReverseEvalList();
+      renderReverseEvalComparison();
+    }
+
+    function setupReverseEvalRowDrag(tr, item) {
+      tr.dataset.evalId = item.id;
+      const handle = tr.querySelector('.drag-handle');
+      handle.addEventListener('dragstart', (e) => {
+        dragReverseEvalId = item.id;
+        tr.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', String(item.id));
+      });
+      handle.addEventListener('dragend', () => {
+        dragReverseEvalId = null;
+        tr.classList.remove('dragging');
+        document.querySelectorAll('#reverseEvalTable tbody tr.drag-over').forEach(el => el.classList.remove('drag-over'));
+      });
+      tr.addEventListener('dragover', (e) => {
+        if (!dragReverseEvalId || dragReverseEvalId === item.id) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        tr.classList.add('drag-over');
+      });
+      tr.addEventListener('dragleave', (e) => {
+        if (!tr.contains(e.relatedTarget)) tr.classList.remove('drag-over');
+      });
+      tr.addEventListener('drop', (e) => {
+        e.preventDefault();
+        tr.classList.remove('drag-over');
+        const fromId = dragReverseEvalId ?? Number(e.dataTransfer.getData('text/plain'));
+        if (!fromId || fromId === item.id) return;
+        reorderReverseEvalById(fromId, item.id);
+      });
+    }
+
+    function renderReverseEvalComparison() {
+      const tbody = document.querySelector('#reverseEvalTable tbody');
+      const baseItem = reverseEvalList.find(p => p.id === reverseEvalBaseId);
+      document.getElementById('reverseEvalCount').textContent = reverseEvalList.length;
+      tbody.innerHTML = '';
+
+      reverseEvalList.forEach((item, index) => {
+        const tr = document.createElement('tr');
+        if (item.id === reverseEvalBaseId) tr.classList.add('highlight');
+
+        let sumHtml = `<strong>${item.randSum}</strong>`;
+        if (baseItem && baseItem.id !== item.id) {
+          const diff = item.randSum - baseItem.randSum;
+          if (diff !== 0) {
+            const cls = diff > 0 ? 'diff-pos' : 'diff-neg';
+            const sign = diff > 0 ? '+' : '';
+            sumHtml += `<br><span class="${cls}">(${sign}${diff})</span>`;
+          }
+        }
+
+        const tierClass = `tier-${item.qualityTier || 'fair'}`;
+        const fitDetail = item.fitErr > 0
+          ? `±${item.fitErr}${item.fitWorstLabel ? ` (${item.fitWorstLabel}${item.fitWorstDiff >= 0 ? '+' : ''}${item.fitWorstDiff})` : ''}`
+          : t('pet.fitMatch');
+        const confClass = item.confidenceLevel === 'high' ? 'high' : item.confidenceLevel === 'medium' ? 'medium' : 'low';
+        const metaParts = [];
+        if (item.gameScore != null) metaParts.push(t('pet.metaScore', { n: item.gameScore }));
+        if (item.lostLabel) metaParts.push(t('pet.metaLost', { label: item.lostLabel }));
+        if (item.allocLabel) metaParts.push(t('pet.metaAlloc', { label: item.allocLabel }));
+        tr.innerHTML = `
+          <td style="text-align:left">
+            <span class="base-dot ${item.id === reverseEvalBaseId ? 'active' : ''}"></span>
+            <strong>${escapeHtml(item.name)}</strong>
+            ${metaParts.length ? `<br><span style="font-size:0.78rem;color:var(--muted);margin-left:18px">${metaParts.join(' · ')}</span>` : ''}
+          </td>
+          <td>${item.level}</td>
+          <td><span class="rand-quality-badge ${tierClass}" style="font-size:0.95rem;margin:0">${item.qualityLabel}（${item.qualityTitle}）</span></td>
+          <td>${sumHtml}</td>
+          <td style="font-size:0.82rem;font-family:ui-monospace,monospace">${escapeHtml(item.randBreakdown)}</td>
+          <td style="font-size:0.82rem">${fitDetail}<br><span class="confidence-tag ${confClass}" style="margin-top:4px">${escapeHtml(item.confidenceText)}</span></td>
+          <td>
+            <div class="compare-ops">
+              <span class="drag-handle" draggable="true" title="${t('pet.dragReorder')}">⋮⋮</span>
+              <button type="button" class="secondary icon-btn" data-re-move-up="${item.id}" title="${t('pet.moveUp')}" ${index === 0 ? 'disabled' : ''}>▲</button>
+              <button type="button" class="secondary icon-btn" data-re-move-down="${item.id}" title="${t('pet.moveDown')}" ${index === reverseEvalList.length - 1 ? 'disabled' : ''}>▼</button>
+              <button type="button" class="secondary" data-re-remove="${item.id}">${t('pet.remove')}</button>
+            </div>
+          </td>
+        `;
+
+        tr.addEventListener('click', (e) => {
+          if (e.target.closest('[data-re-remove], [data-re-move-up], [data-re-move-down], .drag-handle')) return;
+          reverseEvalBaseId = reverseEvalBaseId === item.id ? null : item.id;
+          renderReverseEvalComparison();
+        });
+
+        tr.querySelector('[data-re-remove]').addEventListener('click', (e) => {
+          e.stopPropagation();
+          reverseEvalList = reverseEvalList.filter(p => p.id !== item.id);
+          if (reverseEvalBaseId === item.id) reverseEvalBaseId = null;
+          saveReverseEvalList();
+          renderReverseEvalComparison();
+        });
+
+        tr.querySelector('[data-re-move-up]')?.addEventListener('click', (e) => {
+          e.stopPropagation();
+          moveReverseEvalItem(item.id, -1);
+        });
+
+        tr.querySelector('[data-re-move-down]')?.addEventListener('click', (e) => {
+          e.stopPropagation();
+          moveReverseEvalItem(item.id, 1);
+        });
+
+        setupReverseEvalRowDrag(tr, item);
+        tbody.appendChild(tr);
+      });
+    }
+
+    function sortReverseEvalList(key) {
+      if (reverseEvalSortConfig.key === key) {
+        reverseEvalSortConfig.order = reverseEvalSortConfig.order === 'asc' ? 'desc' : 'asc';
+      } else {
+        reverseEvalSortConfig.key = key;
+        reverseEvalSortConfig.order = ['name', 'level', 'quality'].includes(key) ? 'asc' : 'desc';
+      }
+
+      const qualityOrder = { excellent: 4, good: 3, fair: 2, poor: 1 };
+      reverseEvalList.sort((a, b) => {
+        let va, vb;
+        if (key === 'quality') {
+          va = qualityOrder[a.qualityTier] || 0;
+          vb = qualityOrder[b.qualityTier] || 0;
+        } else if (key === 'fitErr') {
+          va = a.fitErr; vb = b.fitErr;
+        } else {
+          va = a[key]; vb = b[key];
+        }
+        if (va < vb) return reverseEvalSortConfig.order === 'asc' ? -1 : 1;
+        if (va > vb) return reverseEvalSortConfig.order === 'asc' ? 1 : -1;
+        return 0;
+      });
+      saveReverseEvalList();
+      renderReverseEvalComparison();
+    }
+
+    function downloadReverseEvalCSV() {
+      if (!reverseEvalList.length) {
+        alert(t('pet.revCompareEmpty'));
+        return;
+      }
+      const rows = [[
+        t('pet.csv.name'), t('pet.csv.level'), t('pet.csv.rating'), t('pet.csv.title'),
+        t('pet.csv.sum'), t('pet.csv.totalRand'), t('pet.csv.fitErr'), t('pet.csv.worstFit'),
+        t('pet.csv.confidence'), t('pet.csv.lost'), t('pet.csv.points'),
+      ]];
+      reverseEvalList.forEach(p => {
+        const displayName = p.gameScore != null ? `${p.name}（${t('pet.metaScore', { n: p.gameScore })}）` : p.name;
+        rows.push([
+          displayName, p.level, p.qualityLabel, p.qualityTitle, p.randSum, p.randBreakdown,
+          p.fitErr,
+          p.fitWorstLabel ? `${p.fitWorstLabel}${p.fitWorstDiff >= 0 ? '+' : ''}${p.fitWorstDiff}` : '',
+          p.confidenceText, p.lostLabel || '', p.allocLabel || '',
+        ]);
+      });
+      const csv = '\uFEFF' + rows.map(r => r.join(',')).join('\n');
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+      a.download = 'pet_reverse_eval_compare.csv';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    function clearReverseEvalList() {
+      reverseEvalList = [];
+      reverseEvalBaseId = null;
+      saveReverseEvalList();
+      renderReverseEvalComparison();
+    }
+
+    function escapeHtml(s) {
+      return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function sumLostStats(lostArr) {
+      return (lostArr || []).reduce((s, v) => s + (Number(v) || 0), 0);
+    }
+
+    function buildLostLabelFromArray(lostArr) {
+      return (lostArr || []).map((v, i) => v !== 0 ? `${v}${statName(i)}` : '').filter(Boolean).join(' ');
+    }
+
+    function lostTotalFromLabel(lostLabel) {
+      if (!lostLabel) return 0;
+      let sum = 0;
+      for (let i = 0; i < STAT_NAME_KEYS.length; i++) {
+        const m = lostLabel.match(new RegExp(`(\\d+)${statName(i)}`));
+        if (m) sum += Number(m[1]);
+      }
+      return sum;
+    }
+
+    function getCompareLostMeta(pet) {
+      const lostArr = Array.isArray(pet.lost) ? pet.lost : null;
+      const lostTotal = pet.lostTotal != null
+        ? pet.lostTotal
+        : lostArr
+          ? sumLostStats(lostArr)
+          : lostTotalFromLabel(pet.lostLabel);
+      const lostDetail = pet.lostLabel || (lostArr ? buildLostLabelFromArray(lostArr) : '');
+      const lostText = lostTotal === 0
+        ? t('pet.perfectGrade')
+        : lostDetail
+          ? t('pet.lostDetail', { n: lostTotal, detail: lostDetail })
+          : t('pet.lostNSimple', { n: lostTotal });
+      return { lostTotal, lostText };
+    }
+
+    function formatCompareAllocLabel(allocLabel, allocArr) {
+      const label = allocArr ? buildAllocLabelFromArray(allocArr) : allocLabel;
+      return label ? t('pet.allocFmt', { label }) : t('pet.allocZero');
+    }
+
+    function getCompareModMeta(pet) {
+      const modText = formatModText(pet.modGrade ?? 0, pet.cardRank);
+      if (modText === t('pet.modNoneShort')) return { modText, modClass: 'mod-none' };
+      return { modText, modClass: 'mod' };
+    }
+
+    function refreshComparisonLabels() {
+      comparisonList.forEach(pet => {
+        if (pet.lost) pet.lostLabel = buildLostLabelFromArray(pet.lost);
+        if (pet.alloc) pet.allocLabel = buildAllocLabelFromArray(pet.alloc);
+      });
+    }
+
+    function refreshReverseEvalLabels() {
+      reverseEvalList.forEach(item => {
+        const q = randQualityInfo(item.randSum, item.level);
+        item.qualityLabel = q.label;
+        item.qualityTitle = q.title;
+        item.randBreakdown = formatRandBreakdown(item.rand);
+        if (item.lost) item.lostLabel = buildLostLabelFromArray(item.lost);
+        if (item.alloc) item.allocLabel = buildAllocLabelFromArray(item.alloc);
+        if (item.confidenceMsgKey) item.confidenceText = t(item.confidenceMsgKey);
+      });
+    }
+
+    function addToComparison() {
+      const data = getInputs();
+      const { stats, manualCapped } = calculateStats(data, false);
+      const allocLabel = buildAllocLabelFromArray(manualCapped);
+      const lostLabel = data.lost.map((v, i) => v !== 0 ? `${v}${statName(i)}` : '').filter(Boolean).join(' ');
+      const lostTotal = sumLostStats(data.lost);
+      const idx = parseInt(document.getElementById('petSelect').value, 10);
+      const catalogPet = !Number.isNaN(idx) ? filteredPets[idx] : findCatalogPetByName(data.name);
+      const { starCount, starText, starIsMax } = computeCompareStarMeta(catalogPet, data.cardRank, isMaxStar);
+
+      comparisonList.push({
+        id: Date.now() + Math.random(),
+        name: data.name,
+        level: data.level,
+        stats,
+        modGrade: data.modGrade,
+        cardRank: data.cardRank,
+        catalogTotal: catalogPet?.total ?? null,
+        maxStarApplied: isMaxStar,
+        starCount,
+        starText,
+        starIsMax,
+        lost: [...data.lost],
+        lostTotal,
+        alloc: manualCapped.slice(),
+        allocLabel,
+        lostLabel,
+      });
+      renderComparison();
+    }
+
+    function moveCompareItem(id, direction) {
+      const idx = comparisonList.findIndex(p => p.id === id);
+      if (idx < 0) return;
+      const newIdx = idx + direction;
+      if (newIdx < 0 || newIdx >= comparisonList.length) return;
+      const [item] = comparisonList.splice(idx, 1);
+      comparisonList.splice(newIdx, 0, item);
+      renderComparison();
+    }
+
+    function reorderCompareById(fromId, toId) {
+      const fromIdx = comparisonList.findIndex(p => p.id === fromId);
+      let toIdx = comparisonList.findIndex(p => p.id === toId);
+      if (fromIdx < 0 || toIdx < 0 || fromIdx === toIdx) return;
+      const [item] = comparisonList.splice(fromIdx, 1);
+      if (fromIdx < toIdx) toIdx--;
+      comparisonList.splice(toIdx, 0, item);
+      renderComparison();
+    }
+
+    function setupRowDrag(tr, pet) {
+      tr.dataset.petId = pet.id;
+      const handle = tr.querySelector('.drag-handle');
+      handle.addEventListener('dragstart', (e) => {
+        dragPetId = pet.id;
+        tr.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', String(pet.id));
+      });
+      handle.addEventListener('dragend', () => {
+        dragPetId = null;
+        tr.classList.remove('dragging');
+        document.querySelectorAll('#compareTable tbody tr.drag-over').forEach(el => el.classList.remove('drag-over'));
+      });
+      tr.addEventListener('dragover', (e) => {
+        if (!dragPetId || dragPetId === pet.id) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        tr.classList.add('drag-over');
+      });
+      tr.addEventListener('dragleave', (e) => {
+        if (!tr.contains(e.relatedTarget)) tr.classList.remove('drag-over');
+      });
+      tr.addEventListener('drop', (e) => {
+        e.preventDefault();
+        tr.classList.remove('drag-over');
+        const fromId = dragPetId ?? Number(e.dataTransfer.getData('text/plain'));
+        if (!fromId || fromId === pet.id) return;
+        reorderCompareById(fromId, pet.id);
+      });
+
+      handle.addEventListener('touchstart', () => {
+        dragPetId = pet.id;
+        tr.classList.add('dragging');
+      }, { passive: true });
+      handle.addEventListener('touchmove', (e) => {
+        if (!dragPetId) return;
+        const t = e.touches[0];
+        const el = document.elementFromPoint(t.clientX, t.clientY);
+        document.querySelectorAll('#compareTable tbody tr.drag-over').forEach(r => r.classList.remove('drag-over'));
+        const targetRow = el?.closest('#compareTable tbody tr');
+        if (targetRow && Number(targetRow.dataset.petId) !== pet.id) targetRow.classList.add('drag-over');
+      }, { passive: true });
+      handle.addEventListener('touchend', () => {
+        const over = document.querySelector('#compareTable tbody tr.drag-over');
+        tr.classList.remove('dragging');
+        if (over && dragPetId) reorderCompareById(dragPetId, Number(over.dataset.petId));
+        dragPetId = null;
+        document.querySelectorAll('#compareTable tbody tr.drag-over').forEach(r => r.classList.remove('drag-over'));
+      });
+    }
+
+    function renderComparison() {
+      const tbody = document.querySelector('#compareTable tbody');
+      const basePet = comparisonList.find(p => p.id === basePetId);
+      document.getElementById('compareCount').textContent = comparisonList.length;
+      tbody.innerHTML = '';
+
+      comparisonList.forEach((pet, index) => {
+        const tr = document.createElement('tr');
+        if (pet.id === basePetId) tr.classList.add('highlight');
+
+        const cell = (val, key) => {
+          const text = fmtStat(val);
+          let html = `<span>${text}</span>`;
+          if (basePet && basePet.id !== pet.id && pet.stats[key] != null) {
+            const diff = round2(val - basePet.stats[key]);
+            if (diff !== 0) {
+              const cls = diff > 0 ? 'diff-pos' : 'diff-neg';
+              const sign = diff > 0 ? '+' : '';
+              html += `<br><span class="${cls}">(${sign}${fmtStat(diff)})</span>`;
+            }
+          }
+          return html;
+        };
+
+        const { lostTotal, lostText } = getCompareLostMeta(pet);
+        const { starText, starIsMax } = getCompareStarMeta(pet);
+        const { modText, modClass } = getCompareModMeta(pet);
+        const allocText = formatCompareAllocLabel(pet.allocLabel, pet.alloc);
+        const gradeClass = lostTotal === 0 ? 'perfect' : 'lost';
+        const starClass = starIsMax ? 'star-max' : 'star';
+        const starHtml = starText
+          ? ` · <span class="compare-grade ${starClass}">${escapeHtml(starText)}</span>`
+          : '';
+
+        tr.innerHTML = `
+          <td style="text-align:left">
+            <span class="base-dot ${pet.id === basePetId ? 'active' : ''}"></span>
+            <strong>${escapeHtml(gn(pet.name))}</strong>
+            <span class="compare-meta">
+              <span class="compare-grade ${modClass}">${escapeHtml(modText)}</span>
+              · <span class="compare-grade ${gradeClass}">${escapeHtml(lostText)}</span>${starHtml}
+              · ${escapeHtml(allocText)}
+            </span>
+          </td>
+          <td>${pet.level}</td>
+          <td>${cell(pet.stats.hp, 'hp')}</td>
+          <td>${cell(pet.stats.mp, 'mp')}</td>
+          <td>${cell(pet.stats.atk, 'atk')}</td>
+          <td>${cell(pet.stats.def, 'def')}</td>
+          <td>${cell(pet.stats.agi, 'agi')}</td>
+          <td>${cell(pet.stats.rec, 'rec')}</td>
+          <td>${cell(pet.stats.spt, 'spt')}</td>
+          <td style="font-size:0.82rem;white-space:normal;min-width:88px">
+            <span class="compare-grade ${modClass}">${escapeHtml(modText)}</span>
+            <br><span class="compare-grade ${gradeClass}">${escapeHtml(lostText)}</span>
+            ${starText ? `<br><span class="compare-grade ${starClass}">${escapeHtml(starText)}</span>` : ''}
+            <br>${escapeHtml(allocText)}
+          </td>
+          <td>
+            <div class="compare-ops">
+              <span class="drag-handle" draggable="true" title="${t('pet.dragReorder')}">⋮⋮</span>
+              <button type="button" class="secondary icon-btn" data-move-up="${pet.id}" title="${t('pet.moveUp')}" ${index === 0 ? 'disabled' : ''}>▲</button>
+              <button type="button" class="secondary icon-btn" data-move-down="${pet.id}" title="${t('pet.moveDown')}" ${index === comparisonList.length - 1 ? 'disabled' : ''}>▼</button>
+              <button type="button" class="secondary" data-remove="${pet.id}">${t('pet.remove')}</button>
+            </div>
+          </td>
+        `;
+
+        tr.addEventListener('click', (e) => {
+          if (e.target.closest('[data-remove], [data-move-up], [data-move-down], .drag-handle')) return;
+          basePetId = basePetId === pet.id ? null : pet.id;
+          renderComparison();
+        });
+
+        tr.querySelector('[data-remove]').addEventListener('click', (e) => {
+          e.stopPropagation();
+          comparisonList = comparisonList.filter(p => p.id !== pet.id);
+          if (basePetId === pet.id) basePetId = null;
+          renderComparison();
+        });
+
+        tr.querySelector('[data-move-up]')?.addEventListener('click', (e) => {
+          e.stopPropagation();
+          moveCompareItem(pet.id, -1);
+        });
+
+        tr.querySelector('[data-move-down]')?.addEventListener('click', (e) => {
+          e.stopPropagation();
+          moveCompareItem(pet.id, 1);
+        });
+
+        setupRowDrag(tr, pet);
+        tbody.appendChild(tr);
+      });
+    }
+
+    function sortList(key) {
+      if (sortConfig.key === key) {
+        sortConfig.order = sortConfig.order === 'asc' ? 'desc' : 'asc';
+      } else {
+        sortConfig.key = key;
+        sortConfig.order = ['name', 'level'].includes(key) ? 'asc' : 'desc';
+      }
+
+      comparisonList.sort((a, b) => {
+        let va, vb;
+        if (['hp', 'mp', 'atk', 'def', 'agi', 'rec', 'spt'].includes(key)) {
+          va = a.stats[key]; vb = b.stats[key];
+        } else {
+          va = a[key]; vb = b[key];
+        }
+        if (va < vb) return sortConfig.order === 'asc' ? -1 : 1;
+        if (va > vb) return sortConfig.order === 'asc' ? 1 : -1;
+        return 0;
+      });
+      renderComparison();
+    }
+
+    function downloadCSV() {
+      if (!comparisonList.length) {
+        alert(t('pet.compareEmpty'));
+        return;
+      }
+      const rows = [[
+        t('pet.csv.name'), t('pet.csv.level'), 'HP', 'MP',
+        t('stat.atk'), t('stat.def'), t('stat.agi'), t('stat.rec'), t('stat.spt'),
+        t('pet.csv.mod'), t('pet.csv.grade'), t('pet.csv.stars'), t('pet.csv.points'),
+      ]];
+      comparisonList.forEach(p => {
+        const { lostText } = getCompareLostMeta(p);
+        const { starText } = getCompareStarMeta(p);
+        rows.push([
+          p.name, p.level,
+          fmtStat(p.stats.hp), fmtStat(p.stats.mp), fmtStat(p.stats.atk), fmtStat(p.stats.def),
+          fmtStat(p.stats.agi), fmtStat(p.stats.rec), fmtStat(p.stats.spt),
+          formatModText(p.modGrade ?? 0, p.cardRank),
+          lostText,
+          starText || '',
+          p.alloc ? buildAllocLabelFromArray(p.alloc) : (p.allocLabel || '0'),
+        ]);
+      });
+      const csv = '\uFEFF' + rows.map(r => r.join(',')).join('\n');
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+      a.download = 'pet_growth_compare.csv';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    function clearList() {
+      comparisonList = [];
+      basePetId = null;
+      renderComparison();
+    }
+
+    function normalizePetList(raw) {
+      if (Array.isArray(raw)) return raw;
+      if (Array.isArray(raw?.pets)) return raw.pets;
+      return null;
+    }
+
+    async function fetchText(url, useProxy = false) {
+      if (!useProxy) {
+        const res = await fetch(url, { cache: 'no-store' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.text();
+      }
+      let lastErr = null;
+      for (const prefix of CORS_PROXY_PREFIXES) {
+        try {
+          const res = await fetch(prefix + encodeURIComponent(url), { cache: 'no-store' });
+          const text = await res.text();
+          const trimmed = text.trim();
+          if (!res.ok || !(trimmed.startsWith('[') || trimmed.startsWith('{'))) {
+            throw new Error(`HTTP ${res.status}`);
+          }
+          return text;
+        } catch (err) {
+          lastErr = err;
+        }
+      }
+      throw lastErr || new Error(t('pet.loadRemoteFail'));
+    }
+
+    function applyPetDataOverrides() {
+      for (const pet of allPets) {
+        const patch = PET_DATA_OVERRIDES[pet.name];
+        if (!patch) continue;
+        if (patch.cardTier) pet.cardType = patch.cardTier;
+        Object.assign(pet, patch);
+      }
+    }
+
+    function applyPetsData(raw) {
+      const list = normalizePetList(raw);
+      if (!list?.length) throw new Error(t('pet.loadFormatErr'));
+      allPets = list.map(adaptPet);
+      applyPetDataOverrides();
+      const bar = document.getElementById('loadBar');
+      bar.className = 'load-bar status ok';
+      bar.textContent = t('pet.catalogReady', { n: allPets.length });
+      populateFilters();
+      populatePetSelect();
+    }
+
+    async function loadPetsFromFile(file) {
+      const raw = JSON.parse(await file.text());
+      applyPetsData(raw);
+    }
+
+    async function loadPets() {
+      const remoteUrls = [...PETS_URLS, PET_GUIDE_JSON_URL];
+      let lastErr = null;
+      for (const url of remoteUrls) {
+        try {
+          const useProxy = needsCorsProxy(url);
+          const text = await fetchText(url, useProxy);
+          applyPetsData(JSON.parse(text));
+          return;
+        } catch (err) {
+          lastErr = err;
+        }
+      }
+
+      const isFileProtocol = location.protocol === 'file:';
+      const bar = document.getElementById('loadBar');
+      bar.className = 'load-bar status err';
+      bar.innerHTML = [
+        t('pet.loadFail', { msg: lastErr?.message || t('pet.loadRemoteFail') }),
+        isFileProtocol ? t('pet.loadFailFile') : t('pet.loadFailWeb'),
+        `<button type="button" class="secondary" id="pickPetsBtn">${t('pet.catalogPickBtn')}</button>`,
+      ].join('<br>');
+      document.getElementById('pickPetsBtn').addEventListener('click', () => {
+        document.getElementById('petsFileInput').click();
+      });
+    }
+
+    document.getElementById('reverseCalcBtn').addEventListener('click', doReverseCalc);
+    document.getElementById('addReverseEvalBtn').addEventListener('click', addToReverseEvalList);
+    document.getElementById('batchReverseBtn').addEventListener('click', batchReverseEval);
+    document.getElementById('lockManualCheckbox').addEventListener('change', saveLockManualPref);
+    document.querySelectorAll('.rev-param').forEach(el => {
+      el.addEventListener('input', () => { updateReversePointDisplay(); saveReverseParams(); });
+      el.addEventListener('change', () => { updateReversePointDisplay(); saveReverseParams(); });
+    });
+    document.querySelectorAll('.rand-stat').forEach(el => {
+      el.addEventListener('input', () => { isReversedRand = false; });
+    });
+
+    document.querySelectorAll('input, select').forEach(el => {
+      el.addEventListener('input', calculateCurrent);
+      el.addEventListener('change', calculateCurrent);
+    });
+
+    document.getElementById('raceFilter').addEventListener('change', populatePetSelect);
+    document.getElementById('cardFilter').addEventListener('change', populatePetSelect);
+
+    document.getElementById('petSelect').addEventListener('change', () => {
+      const idx = parseInt(document.getElementById('petSelect').value, 10);
+      if (Number.isNaN(idx)) {
+        updatePetPortrait(null);
+        clearObservedInputs();
+        applyPetToReverseParams(null);
+        return;
+      }
+      applyPetToInputs(filteredPets[idx]);
+    });
+
+    document.getElementById('maxStarBtn').addEventListener('click', () => {
+      isMaxStar = !isMaxStar;
+      updateMaxStarBtn();
+      const idx = parseInt(document.getElementById('petSelect').value, 10);
+      if (!Number.isNaN(idx)) applyPetToInputs(filteredPets[idx]);
+    });
+
+    document.querySelectorAll('#compareTable th[data-sort]').forEach(th => {
+      th.addEventListener('click', () => sortList(th.dataset.sort));
+    });
+
+    document.querySelectorAll('#reverseEvalTable th[data-re-sort]').forEach(th => {
+      th.addEventListener('click', () => sortReverseEvalList(th.dataset.reSort));
+    });
+
+    document.getElementById('petsFileInput').addEventListener('change', async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      try {
+        await loadPetsFromFile(file);
+      } catch (err) {
+        document.getElementById('loadBar').className = 'load-bar status err';
+        document.getElementById('loadBar').textContent = t('pet.fileReadErr', { msg: err.message });
+      }
+      e.target.value = '';
+    });
+
+    function applyPetLang() {
+      StarCG_I18N.apply(document.body);
+      document.querySelectorAll('#preview .k[data-k]').forEach(el => {
+        el.textContent = StarCG_I18N.stat(el.dataset.k);
+      });
+      refreshPetDropdowns();
+      updateMaxStarBtn();
+      if (allPets.length) {
+        populateFilters();
+        populatePetSelect();
+      }
+      refreshComparisonLabels();
+      refreshReverseEvalLabels();
+      calculateCurrent();
+      updateReversePointDisplay();
+      if (lastReverseDisplay) {
+        const { best, solvedData, observed } = lastReverseDisplay;
+        const confidence = assessReverseConfidence(solvedData, observed, best);
+        showReverseStatus(best, solvedData, observed, confidence);
+      }
+      renderComparison();
+      renderReverseEvalComparison();
+    }
+
+    refreshPetDropdowns();
+    StarCG_I18N.init({ titleKey: 'pet.docTitle', onChange: applyPetLang });
+
+    loadLockManualPref();
+    loadReverseParams();
+    loadReverseEvalList();
+    renderReverseEvalComparison();
+    calculateCurrent();
+    loadPets();
+  </script>
+
+
+</body></html>
