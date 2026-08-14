@@ -3359,10 +3359,12 @@ function getVariableStatKeys(itemName, itemId) {
 const WORKER_URL = '';
 
 // CORS 代理（原作者的 Worker 暫時停用，避免佔用他的免費額度；改用公共代理）
+// 順序依實測可用性排列：codetabs 目前連線後無回應會整整卡滿逾時時間，allorigins 回 520，
+// corsproxy.io 實測正常，故排最前面，其餘留著當備援（之後可能恢復）。
 const CORS_PROXIES = [
-    { prefix: 'https://api.codetabs.com/v1/proxy/?quest=', encode: true },
     { prefix: 'https://corsproxy.io/?url=', encode: true },
-    { prefix: 'https://api.allorigins.win/raw?url=', encode: true }
+    { prefix: 'https://api.allorigins.win/raw?url=', encode: true },
+    { prefix: 'https://api.codetabs.com/v1/proxy/?quest=', encode: true }
 ];
 
 // 本機用 proxy.py 測試時，自動優先走本機代理
