@@ -382,6 +382,7 @@
     'price.removeTag': tr('移除', 'Remove', '제거'),
     'price.clearTags': tr('🗑️ 清空紀錄', '🗑️ Clear history', '🗑️ 기록 삭제'),
     'price.clearTagsTip': tr('清空非釘選的搜尋紀錄', 'Clear unpinned history', '고정 외 기록 삭제'),
+    'price.quickTagUncategorized': tr('未分類', 'Uncategorized', '미분류'),
 
     /* exchange */
     'price.exchangeHint': tr('100萬魔幣={crystal}魔晶', '1M coins = {crystal} crystals', '100만 골드 = {crystal} 크리'),

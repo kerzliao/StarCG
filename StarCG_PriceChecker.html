@@ -615,24 +615,49 @@
         /* Quick Tags */
         .quick-tags {
             display: flex;
-            flex-wrap: wrap;
+            flex-direction: column;
             gap: 6px;
-            margin-top: 10px;
-            padding-top: 10px;
+            margin-top: 8px;
+            padding-top: 8px;
             border-top: 1px solid var(--border);
+        }
+
+        .quick-tags-head {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            margin-bottom: -2px;
+        }
+
+        .quick-tags-head:empty { display: none; }
+
+        .quick-tag-group-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            margin-bottom: 3px;
+            line-height: 1.2;
+        }
+
+        .quick-tag-group-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            align-items: center;
         }
 
         .quick-tag {
             background: var(--bg-dark);
             border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 8px 16px;
-            font-size: 1rem;
+            border-radius: 16px;
+            padding: 4px 10px;
+            font-size: 0.92rem;
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             transition: all 0.2s;
+            line-height: 1.3;
         }
 
         .quick-tag:hover {
@@ -677,8 +702,8 @@
             border: 1px dashed var(--accent-red);
             color: var(--accent-red);
             border-radius: 20px;
-            padding: 9px 18px;
-            font-size: 0.95rem;
+            padding: 4px 12px;
+            font-size: 0.82rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
@@ -2119,12 +2144,12 @@
             }
 
             .quick-tags {
-                gap: 6px;
+                gap: 4px;
             }
 
             .quick-tag {
-                padding: 6px 12px;
-                font-size: 0.9rem;
+                padding: 3px 8px;
+                font-size: 0.85rem;
             }
 
             .stats-grid {
@@ -3377,11 +3402,10 @@ function getVariableStatKeys(itemName, itemId) {
 /* ========================================
    全域變數
 ======================================== */
-// 自己架的 Cloudflare Worker（見 cloudflare-worker.js），只允許代理 member.starcg.net
+// 自己架的 Cloudflare Worker（見 cloudflare-worker.js），只允許代理 member.starcg.net / guide.starcg.net
 const WORKER_URL = 'https://starcg-1.kerzliao.workers.dev/?u=';
 
-// CORS 代理：自架 Worker 排第一（穩定），公共代理留著當備援
-// （2026-08 實測：corsproxy.io 改要收費 API key、allorigins/codetabs 常連不上，別太依賴它們）
+// CORS 代理：自架 Worker 排第一，公共代理留著當備援
 // 部分地區（中國大陸、香港）曾回報 Cloudflare 節點連不上，所以每個代理都給 id，
 // 讓使用者能透過右上角選單手動指定要走哪個（見 initProxySelector / PROXY_STORAGE_KEY）。
 const CORS_PROXIES = [
@@ -3907,14 +3931,176 @@ function tagHtml(tag, pinned) {
         </div>`;
 }
 
+/** 快捷清單分類索引：tabIdx + 類內順序（系列裝併入武／防） */
+let bountySortIndexCache = null;
+
+function bountyEntryName(it) {
+    if (Array.isArray(it)) return String(it.length === 1 ? it[0] : (it[1] ?? '')).trim();
+    return String(it ?? '').trim();
+}
+
+function normalizeQuickTagKey(name) {
+    return String(name || '')
+        .trim()
+        .replace(/（/g, '(')
+        .replace(/）/g, ')')
+        .replace(/／/g, '/')
+        .replace(/\s+/g, '');
+}
+
+function bountyTabIdxByLabelKey(labelKey) {
+    return COMMON_TABS.findIndex(t => t.labelKey === labelKey);
+}
+
+/** 系列裝名稱歸入武器／防具／其他（歷史分類用，不影響快捷清單分頁） */
+function seriesItemDisplayTabIdx(name) {
+    const weaponIdx = bountyTabIdxByLabelKey('price.bountyTab.weapon');
+    const armorIdx = bountyTabIdxByLabelKey('price.bountyTab.armor');
+    const otherIdx = bountyTabIdxByLabelKey('price.bountyTab.other');
+    const n = String(name || '');
+    if (/劍|斧|槍|弓|杖|小刀|冰龍|回力/.test(n)) return weaponIdx >= 0 ? weaponIdx : 0;
+    if (/盔|帽|鎧|甲|衣|袍|裳|靴|鞋|盾/.test(n)) return armorIdx >= 0 ? armorIdx : 1;
+    return otherIdx >= 0 ? otherIdx : (armorIdx >= 0 ? armorIdx : 1);
+}
+
+function registerBountySortName(map, name, tabIdx, itemRank) {
+    if (!name) return;
+    const meta = { tabIdx, itemRank };
+    const variants = new Set([name, normalizeQuickTagKey(name)]);
+    try {
+        if (typeof toMarketPetName === 'function') {
+            const market = toMarketPetName(name);
+            if (market) {
+                variants.add(market);
+                variants.add(normalizeQuickTagKey(market));
+            }
+        }
+    } catch (_) { /* ignore */ }
+    for (const v of variants) {
+        if (v && !map.has(v)) map.set(v, meta);
+    }
+}
+
+function getBountySortIndex() {
+    if (bountySortIndexCache) return bountySortIndexCache;
+    const map = new Map();
+    let itemRank = 0;
+    const addName = (name, tabIdx) => {
+        registerBountySortName(map, name, tabIdx, itemRank);
+        itemRank += 1;
+    };
+    const addEntries = (items, tabIdx) => {
+        if (!Array.isArray(items)) return;
+        for (const it of items) addName(bountyEntryName(it), tabIdx);
+    };
+    const addSeriesEntries = items => {
+        if (!Array.isArray(items)) return;
+        for (const it of items) {
+            const name = bountyEntryName(it);
+            if (!name) continue;
+            addName(name, seriesItemDisplayTabIdx(name));
+        }
+    };
+
+    COMMON_TABS.forEach((tab, tabIdx) => {
+        // 系列裝不獨立成類，併入武／防
+        if (tab.labelKey === 'price.bountyTab.series') {
+            const groups = tab.groups;
+            if (!groups) return;
+            for (const [cat, items] of Object.entries(groups)) {
+                if (BOUNTY_NESTED_SERIES[cat]) {
+                    for (const arr of Object.values(BOUNTY_NESTED_SERIES[cat])) addSeriesEntries(arr);
+                } else {
+                    addSeriesEntries(items);
+                }
+            }
+            return;
+        }
+
+        const groups = tab.petCatalog
+            ? (typeof buildAllPetGroups === 'function' ? buildAllPetGroups() : null)
+            : tab.groups;
+        if (!groups) return;
+        for (const [cat, items] of Object.entries(groups)) {
+            if (cat === BOUNTY_PET_DELIVERY_KEY) {
+                for (const arr of Object.values(BOUNTY_PET_RARITY)) addEntries(arr, tabIdx);
+            } else if (BOUNTY_NESTED_SERIES[cat]) {
+                for (const arr of Object.values(BOUNTY_NESTED_SERIES[cat])) addEntries(arr, tabIdx);
+            } else {
+                addEntries(items, tabIdx);
+            }
+        }
+    });
+    bountySortIndexCache = map;
+    return map;
+}
+
+function bountyTagMeta(tag) {
+    const map = getBountySortIndex();
+    const raw = String(tag || '').trim();
+    if (map.has(raw)) return map.get(raw);
+    const norm = normalizeQuickTagKey(raw);
+    if (map.has(norm)) return map.get(norm);
+    return null;
+}
+
+function renderQuickTagGroup(title, tagEntries) {
+    if (!tagEntries.length) return '';
+    const tagsHtml = tagEntries
+        .map(({ tag, pinned }) => tagHtml(tag, pinned))
+        .join('');
+    return `<div class="quick-tag-group">
+        <div class="quick-tag-group-title">${escapeHtml(title)}</div>
+        <div class="quick-tag-group-tags">${tagsHtml}</div>
+    </div>`;
+}
+
 function renderQuickTags() {
     const container = document.getElementById('quickTags');
-    const pinnedHtml = pinnedTags.map(tag => tagHtml(tag, true)).join('');
-    const historyHtml = quickTags.map(tag => tagHtml(tag, false)).join('');
-    const clearBtn = quickTags.length > 0
-        ? `<button class="clear-tags" data-act="clear" title="${escapeAttr(T('price.clearTagsTip'))}">${T('price.clearTags')}</button>`
+    const groups = COMMON_TABS
+        .map((tab, tabIdx) => ({
+            tabIdx,
+            labelKey: tab.labelKey,
+            title: T(tab.labelKey),
+            entries: []
+        }))
+        .filter(g => g.labelKey !== 'price.bountyTab.series');
+    const groupByTabIdx = new Map(groups.map(g => [g.tabIdx, g]));
+    const unmatched = [];
+
+    const place = (tag, pinned) => {
+        const meta = bountyTagMeta(tag);
+        const entry = { tag, pinned, itemRank: meta?.itemRank ?? Number.MAX_SAFE_INTEGER, ord: 0 };
+        const bucket = meta ? groupByTabIdx.get(meta.tabIdx) : null;
+        if (bucket) {
+            entry.ord = bucket.entries.length;
+            bucket.entries.push(entry);
+        } else {
+            entry.ord = unmatched.length;
+            unmatched.push(entry);
+        }
+    };
+
+    pinnedTags.forEach(tag => place(tag, true));
+    quickTags.forEach(tag => place(tag, false));
+
+    const sortEntries = list => list.sort((a, b) =>
+        (a.pinned === b.pinned ? 0 : a.pinned ? -1 : 1)
+        || a.itemRank - b.itemRank
+        || a.ord - b.ord
+    );
+
+    groups.forEach(g => sortEntries(g.entries));
+    sortEntries(unmatched);
+
+    const headHtml = quickTags.length > 0
+        ? `<div class="quick-tags-head"><button type="button" class="clear-tags" data-act="clear" title="${escapeAttr(T('price.clearTagsTip'))}">${T('price.clearTags')}</button></div>`
         : '';
-    container.innerHTML = pinnedHtml + historyHtml + clearBtn;
+    const groupsHtml = groups
+        .map(g => renderQuickTagGroup(g.title, g.entries))
+        .join('');
+    const otherHtml = renderQuickTagGroup(T('price.quickTagUncategorized'), unmatched);
+    container.innerHTML = headHtml + groupsHtml + otherHtml;
 }
 
 function quickSearch(tag, exact = false) {
@@ -7944,7 +8130,9 @@ let allPetCatalogCache = null;
 
 function invalidateAllPetCatalogCache() {
     allPetCatalogCache = null;
+    bountySortIndexCache = null;
     if (typeof renderBounty === 'function') renderBounty();
+    if (typeof renderQuickTags === 'function') renderQuickTags();
     if (typeof initProcurementUi === 'function') initProcurementUi(true);
 }
 

@@ -1,0 +1,2517 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>角色能力計算器 - 星詠魔力</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #f3efe9; --bg-card: #faf8f5; --border: #ddd5c8;
+      --text-primary: #443c34; --text-secondary: #7a7268;
+      --accent: #8b7355; --accent-soft: #ebe6de; --accent-gold: #b8956a;
+      --accent-green: #6a9468; --accent-red: #b86868; --radius: 10px;
+      --crystal-battle: #2d8a8a; --crystal-vital: #b8860b; --crystal-mod: #6a9468; --title-move: #9b7bb8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Noto Sans TC', sans-serif; background: var(--bg-dark); color: var(--text-primary); line-height: 1.6; }
+    .wrap { max-width: 1380px; margin: 0 auto; padding: 16px; }
+    header { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+    header h1 { font-size: clamp(1.2rem, 4vw, 1.6rem); color: #6b5a45; }
+    .header-nav { margin-left: auto; display: flex; flex-wrap: wrap; gap: 10px; }
+    .header-nav a { color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; }
+    .header-nav a:hover { color: var(--text-primary); text-decoration: underline; }
+    /* 三欄：配點 | 加成系統 | 裝備+能力 */
+    .grid {
+      display: grid; gap: 14px; align-items: start;
+      grid-template-columns: minmax(210px, 240px) minmax(280px, 320px) minmax(0, 1fr);
+    }
+    .card-points .field-row.level-row { grid-template-columns: 1fr; }
+    .card-points .field-row.points-stat-fields { grid-template-columns: 1fr; gap: 8px; }
+    .card-points .status-item { padding: 8px; }
+    .card-points .status-item .v { font-size: 1.1rem; }
+    @media (max-width: 1200px) {
+      .grid { grid-template-columns: 1fr 1fr; }
+      .grid > .card-equip { grid-column: 1 / -1; }
+    }
+    @media (max-width: 800px) {
+      .grid { grid-template-columns: 1fr; }
+      .grid > .card-equip { grid-column: auto; }
+    }
+    .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; box-shadow: 0 2px 10px rgba(68,60,52,.06); }
+    .card h2 { font-size: 1rem; margin-bottom: 12px; color: #6b5a45; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+    .hint { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 10px; }
+    .status { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 12px; }
+    .status-item { background: var(--accent-soft); border-radius: 8px; padding: 10px; text-align: center; }
+    .status-item .k { font-size: 0.78rem; color: var(--text-secondary); }
+    .status-item .v { font-size: 1.25rem; font-weight: 700; }
+    .field-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 10px; }
+    .field label { display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 4px; font-weight: 600; }
+    .field-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; gap: 8px; }
+    .field-head label { margin-bottom: 0; }
+    .stat-shortcuts { display: flex; gap: 4px; flex-shrink: 0; }
+    .stat-shortcut-btn {
+      padding: 2px 7px; font-size: 0.72rem; border: 1px solid var(--border); border-radius: 6px;
+      background: var(--accent-soft); color: var(--accent); cursor: pointer; font-weight: 700; line-height: 1.4;
+    }
+    .stat-shortcut-btn:hover { background: var(--accent); color: #fff; }
+    .stat-shortcut-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .stat-clear-all { margin-bottom: 10px; }
+    .stat-clear-all .stat-shortcut-btn { padding: 4px 12px; font-size: 0.78rem; }
+    .equip-extra-options {
+      display: flex; flex-wrap: nowrap; gap: 10px 12px; align-items: center; margin-top: 4px;
+      font-size: 0.85rem;
+    }
+    .equip-extra-options label {
+      display: inline-flex; align-items: flex-start; gap: 6px; cursor: pointer;
+      color: var(--text-secondary); min-width: 0; flex: 1; line-height: 1.35;
+    }
+    .equip-extra-options label span { min-width: 0; }
+    .equip-extra-options input { accent-color: var(--accent); margin-top: 0.2em; flex-shrink: 0; }
+    .equip-extra-options .stat-shortcut-btn { padding: 4px 12px; font-size: 0.78rem; flex-shrink: 0; }
+    .slot-cluster { display: flex; align-items: center; gap: 6px; width: max-content; max-width: none; }
+    .cluster-top { flex-direction: column; align-items: center; }
+    .cluster-left { flex-direction: row; }
+    .cluster-right { flex-direction: row; }
+    .cluster-bottom { flex-direction: column; align-items: center; }
+    .decor-col { display: flex; gap: 5px; flex-shrink: 0; }
+    .cluster-top .decor-col, .cluster-bottom .decor-col { flex-direction: row; }
+    .cluster-left .decor-col, .cluster-right .decor-col { flex-direction: column; }
+    .decor-btn {
+      min-width: 36px; min-height: 36px; padding: 3px; border: 1px solid #c4b8a8; border-radius: 8px;
+      background: #fffaf2; cursor: pointer; text-align: center; font-size: 0.85rem; line-height: 1;
+      color: #6b5a45; display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+    }
+    .decor-btn:hover { background: #f0e4d4; border-color: var(--accent); }
+    .decor-btn.empty { color: var(--text-secondary); font-size: 1rem; flex-direction: row; }
+    .decor-btn.has-img { min-width: 50px; max-width: 56px; padding: 3px 2px; }
+    .decor-btn .decor-thumb {
+      width: 26px; height: 26px; object-fit: contain; image-rendering: pixelated; display: block; flex-shrink: 0;
+    }
+    .decor-btn .decor-label {
+      font-size: 0.48rem; font-weight: 700; line-height: 1.1; max-width: 52px;
+      overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    }
+    .picker-item .decor-icon { font-size: 1.1rem; line-height: 28px; }
+    .equip-mode-rows { margin-top: 10px; }
+    .equip-mode-rows .stat-mode-row:last-child { margin-bottom: 0; }
+    .field input, .field select { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; background: #fff; font-size: 1rem; }
+    .stat-mode-row { margin-bottom: 6px; }
+    .custom-stat-panel {
+      margin-top: auto; padding: 10px; border: 1px dashed var(--border); border-radius: 8px;
+      background: #fff; max-height: min(42vh, 360px); overflow-y: auto;
+    }
+    .custom-stat-panel.hidden { display: none; }
+    .custom-slot-block + .custom-slot-block { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+    .custom-slot-label { font-size: 0.82rem; font-weight: 700; color: var(--accent); margin-bottom: 6px; }
+    .custom-stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 6px; }
+    .custom-stat-grid label { font-size: 0.75rem; color: var(--text-secondary); display: block; }
+    .custom-stat-grid input { width: 100%; margin-top: 2px; padding: 4px 6px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.9rem; }
+    /* 裝備區略縮寬、略加高；能力結果接近配點欄寬 */
+    .equip-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 480px) minmax(220px, 240px);
+      gap: 14px;
+      align-items: stretch;
+      justify-content: start;
+    }
+    @media (max-width: 900px) { .equip-layout { grid-template-columns: 1fr; } }
+    .results-column { display: flex; flex-direction: column; min-height: 100%; max-width: 240px; width: 100%; }
+    @media (max-width: 900px) { .results-column { max-width: none; } }
+    .equip-stage {
+      position: relative; height: 480px; width: 100%; max-width: 480px;
+      border: 1px solid var(--border); border-radius: 12px;
+      background: radial-gradient(closest-side, #f5e8da 40%, #faf4ec 100%);
+      overflow: hidden;
+    }
+    .equip-stage .slot { position: absolute; width: max-content; max-width: none; z-index: 1; }
+    .equip-stage .slot-cluster { z-index: 2; max-width: none; }
+    .slot.tl { left: 3%; top: 11%; }
+    .slot.tc { left: 50%; top: 2%; transform: translateX(-50%); }
+    .slot.tr { right: 3%; top: 11%; }
+    .slot.ml { left: 5%; top: 48%; transform: translateY(-50%); }
+    .slot.mr { right: 5%; top: 48%; transform: translateY(-50%); }
+    .slot.bl { left: 12%; bottom: 3%; }
+    .slot.br { right: 12%; bottom: 3%; }
+    .equip-btn {
+      width: 96px; min-width: 96px; max-width: 96px; flex-shrink: 0;
+      padding: 10px 8px; border: 1px solid var(--border); border-radius: 10px;
+      background: #fff; cursor: pointer; text-align: center; font-size: 0.82rem; line-height: 1.35;
+      color: var(--text-primary);
+    }
+    .equip-btn:hover { background: var(--accent-soft); }
+    .equip-btn .slot-label { display: block; font-weight: 700; color: var(--text-secondary); font-size: 0.75rem; }
+    .equip-btn .item-name { display: block; font-weight: 700; color: var(--text-primary); margin-top: 2px; }
+    .equip-btn .item-name.empty { color: var(--text-secondary); font-weight: 500; }
+    .equip-btn .equip-thumb { width: 28px; height: 28px; object-fit: contain; image-rendering: pixelated; display: block; margin: 0 auto 4px; }
+    .result-block { background: var(--accent-soft); border-radius: 10px; padding: 12px; margin-bottom: 10px; }
+    .result-block h3 { font-size: 0.92rem; margin-bottom: 8px; }
+    .result-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px; font-size: 0.88rem; }
+    .result-mod-stack {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px 10px;
+      align-items: start;
+    }
+    .result-list.mod-correct,
+    .result-list.mod-resist {
+      grid-template-columns: 1fr;
+      gap: 6px;
+      font-size: 0.88rem;
+    }
+    .result-item { display: flex; justify-content: space-between; gap: 6px; min-width: 0; }
+    .result-item.spacer { visibility: hidden; pointer-events: none; }
+    .result-item span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .load-bar { padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 14px; font-size: 0.9rem; color: var(--text-secondary); }
+    .load-bar.ok { background: #f2f6f2; border-color: #c4d4c4; color: #4a684a; }
+    .load-bar.err { background: #f8f4f0; border-color: #d4c8b8; color: #6b5a45; }
+    .modal { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 16px; }
+    .modal.hidden { display: none; }
+    .modal-card { width: min(720px, 100%); max-height: 88vh; display: flex; flex-direction: column; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+    .modal-card.picker-dialog { width: min(920px, 100%); }
+    .modal-header { padding: 12px 16px; border-bottom: 1px solid var(--border); font-weight: 700; }
+    .modal-body { padding: 12px 16px; overflow: auto; flex: 1; }
+    .modal-actions { padding: 12px 16px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
+    .picker-hint { margin-bottom: 6px; }
+    .picker-stat-preview,
+    .equip-stat-preview {
+      min-height: 2.5em; padding: 8px 10px; margin-bottom: 10px;
+      border: 1px solid var(--border); border-radius: 8px; background: #fff;
+      font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;
+    }
+    .picker-stat-preview.active,
+    .equip-stat-preview.active { color: var(--text-primary); }
+    .picker-stat-preview .name,
+    .equip-stat-preview .name { font-weight: 700; color: var(--text-primary); margin-right: 8px; }
+    .picker-layout { display: flex; gap: 12px; min-height: 340px; }
+    .picker-sub-tabs {
+      display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; min-width: 88px;
+      border-right: 1px solid var(--border); padding-right: 10px; max-height: 52vh; overflow-y: auto;
+    }
+    .picker-sub-tab {
+      padding: 8px 12px; cursor: pointer; border-radius: 6px; color: var(--text-secondary);
+      font-weight: 600; font-size: 0.88rem; white-space: nowrap; text-align: left; border: none; background: transparent;
+    }
+    .picker-sub-tab:hover { background: var(--accent-soft); color: var(--text-primary); }
+    .picker-sub-tab.active { background: var(--accent-gold); color: #fff; }
+    .picker-grid-wrap { flex: 1; min-width: 0; overflow-y: auto; max-height: 52vh; }
+    .picker-cat-title {
+      font-weight: 700; color: var(--text-primary); margin: 0 0 8px; padding-bottom: 4px;
+      border-bottom: 1px dashed var(--border); font-size: 0.9rem;
+    }
+    .picker-stat-group-title {
+      font-size: 0.82rem; font-weight: 700; color: var(--text-secondary);
+      margin: 12px 0 6px; padding-left: 2px;
+    }
+    .picker-stat-group-title:first-child { margin-top: 0; }
+    .picker-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+    .picker-item {
+      display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+      width: 86px; min-height: 96px; padding: 8px 4px 6px; border: 1px solid var(--border); border-radius: 8px;
+      background: #fff; cursor: pointer; text-align: center; transition: all 0.15s;
+      color: var(--text-primary); font-weight: 500;
+    }
+    .picker-item:hover { border-color: var(--accent-gold); background: #fff8ee; color: var(--text-primary); }
+    .picker-icon { width: 40px; height: 40px; object-fit: contain; image-rendering: pixelated; margin-bottom: 4px; }
+    .picker-icon.placeholder { display: block; background: var(--accent-soft); border-radius: 4px; }
+    .picker-item .lv { font-size: 0.68rem; color: var(--text-secondary); margin-bottom: 2px; font-weight: 700; }
+    .picker-item .name { font-size: 0.78rem; line-height: 1.3; font-weight: 700; color: var(--text-primary); word-break: break-all; }
+    @media (max-width: 640px) {
+      .picker-layout { flex-direction: column; }
+      .picker-sub-tabs { flex-direction: row; flex-wrap: wrap; border-right: none; border-bottom: 1px solid var(--border); padding-right: 0; padding-bottom: 8px; max-height: none; }
+    }
+    button { padding: 10px 16px; border-radius: 8px; border: 1px solid var(--accent); background: var(--accent); color: #fff; cursor: pointer; font-weight: 600; }
+    button.secondary { background: #fff; color: var(--text-primary); border-color: var(--border); }
+    table.compare { width: 100%; border-collapse: collapse; font-size: 0.85rem; min-width: 900px; }
+    table.compare th, table.compare td { border-bottom: 1px solid var(--border); padding: 8px; text-align: center; }
+    table.compare th { background: var(--accent-soft); }
+    .compare-wrap { overflow-x: auto; margin-top: 10px; }
+    .bonus-card .crystal-panel,
+    .bonus-card .title-ach-panel,
+    .bonus-card .train-panel { margin-top: 0; padding-top: 0; border-top: none; }
+    .bonus-card .title-ach-panel,
+    .bonus-card .train-panel { margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--border); }
+    .crystal-title, .title-ach-title, .train-title { font-size: 0.92rem; margin-bottom: 6px; color: #6b5a45; }
+    .train-preview { margin-top: 8px; min-height: 2em; }
+    .train-actions { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+    .train-stat-blocks { display: flex; flex-direction: column; gap: 10px; }
+    .train-stat-blocks.hidden { display: none; }
+    .train-stat-block-label {
+      font-size: 0.78rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 6px;
+    }
+    .train-stat-grid {
+      display: grid;
+      gap: 8px;
+    }
+    .train-stat-grid.cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .train-stat-grid.cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .train-stat-grid label {
+      display: flex; flex-direction: column; gap: 4px;
+      font-size: 0.78rem; font-weight: 700; color: var(--text-secondary);
+    }
+    .train-stat-grid input {
+      width: 100%; padding: 6px 8px; border: 1px solid var(--border); border-radius: 8px;
+      background: #fff; font-size: 0.95rem; box-sizing: border-box;
+    }
+    @media (max-width: 520px) {
+      .train-stat-grid.cols-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .train-stat-grid.cols-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    .title-ach-preview { margin-top: 8px; min-height: 2em; }
+    .title-ach-preview.active { color: var(--text-primary); }
+    .title-ach-ref-wrap { margin-top: 10px; }
+    .title-ach-ref-wrap details { border: 1px solid var(--border); border-radius: 8px; background: #fff; }
+    .title-ach-ref-wrap summary {
+      cursor: pointer; padding: 8px 10px; font-size: 0.82rem; font-weight: 700; color: var(--text-secondary);
+      list-style: none; user-select: none;
+    }
+    .title-ach-ref-wrap summary::-webkit-details-marker { display: none; }
+    .title-ach-ref-wrap summary::before { content: '▸ '; color: var(--accent); }
+    .title-ach-ref-wrap details[open] summary::before { content: '▾ '; }
+    .title-ach-ref-table-wrap { overflow-x: auto; max-height: 260px; overflow-y: auto; border-top: 1px solid var(--border); }
+    table.title-ach-ref-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+    table.title-ach-ref-table th, table.title-ach-ref-table td {
+      border-bottom: 1px solid var(--border); padding: 6px 8px; text-align: left; vertical-align: top; line-height: 1.4;
+    }
+    table.title-ach-ref-table thead th { background: var(--accent-soft); font-weight: 700; white-space: nowrap; color: #6b5a45; }
+    table.title-ach-ref-table tr:last-child th, table.title-ach-ref-table tr:last-child td { border-bottom: none; }
+    table.title-ach-ref-table tr.active-tier { background: #eef8ee; }
+    table.title-ach-ref-table .tier-on { color: #2e7d32; font-weight: 700; }
+    table.title-ach-ref-table .tier-off { color: var(--text-secondary); opacity: 0.55; }
+    table.title-ach-ref-table .bonus-cell { font-weight: 600; }
+    table.title-ach-ref-table .crystal-grp { display: inline; font-weight: 600; }
+    table.title-ach-ref-table .bonus-sep { color: var(--text-secondary); font-weight: 500; }
+    .bonus-quick-label { font-size: 0.78rem; font-weight: 700; color: var(--text-secondary); margin: 0 0 6px; }
+    .title-ach-quick, .crystal-level-quick { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+    .crystal-fields { margin-top: 0; grid-template-columns: 1fr; }
+    .crystal-roll-actions { display: flex; gap: 8px; align-items: center; margin-top: 8px; flex-wrap: wrap; }
+    #crystalStatPreview { margin-top: 8px; min-height: 2em; }
+    .crystal-custom-panel { margin-top: 8px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; background: #fff; }
+    .crystal-custom-panel.hidden { display: none; }
+    .crystal-custom-title { font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 6px; }
+    .crystal-custom-row { display: grid; grid-template-columns: 42px 1fr; gap: 6px; align-items: center; margin-bottom: 6px; }
+    .crystal-custom-row:last-child { margin-bottom: 0; }
+    .crystal-custom-row label { font-size: 0.78rem; font-weight: 700; color: var(--text-secondary); text-align: center; }
+    .crystal-pick-select { width: 100%; padding: 5px 6px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.78rem; background: #fff; }
+    #crystalRerollBtn.hidden { display: none; }
+    .crystal-ref-wrap { margin-top: 10px; }
+    .crystal-ref-wrap details { border: 1px solid var(--border); border-radius: 8px; background: #fff; }
+    .crystal-ref-wrap summary {
+      padding: 8px 10px; font-size: 0.82rem; font-weight: 700; color: var(--text-secondary);
+      cursor: pointer; list-style: none; user-select: none;
+    }
+    .crystal-ref-wrap summary::-webkit-details-marker { display: none; }
+    .crystal-ref-wrap summary::before { content: '▸ '; color: var(--accent); }
+    .crystal-ref-wrap details[open] summary::before { content: '▾ '; }
+    .crystal-ref-wrap summary:hover { color: var(--text-primary); background: var(--accent-soft); border-radius: 8px; }
+    .crystal-ref-table-wrap { overflow-x: hidden; max-height: 240px; overflow-y: auto; border-top: 1px solid var(--border); }
+    table.crystal-ref-table { width: 100%; border-collapse: collapse; font-size: 0.76rem; table-layout: fixed; }
+    table.crystal-ref-table th, table.crystal-ref-table td { border-bottom: 1px solid var(--border); padding: 6px 5px; text-align: left; vertical-align: top; line-height: 1.4; }
+    table.crystal-ref-table thead th { background: var(--accent-soft); font-weight: 700; white-space: nowrap; }
+    table.crystal-ref-table tbody th {
+      background: var(--accent-soft); font-weight: 700; color: var(--text-primary);
+      width: 48px; padding: 6px 3px; text-align: center; white-space: normal; font-size: 0.72rem; line-height: 1.25;
+    }
+    table.crystal-ref-table thead th:first-child { width: 48px; text-align: center; }
+    table.crystal-ref-table tbody td { overflow-wrap: anywhere; word-break: break-word; }
+    table.crystal-ref-table tr:last-child th, table.crystal-ref-table tr:last-child td { border-bottom: none; }
+    .crystal-ref-lvl-sub { display: block; font-size: 0.68rem; font-weight: 600; color: var(--text-secondary); margin-top: 1px; }
+    .crystal-ref-empty { color: var(--text-secondary); opacity: 0.45; }
+    .crystal-grp-battle, .crystal-ref-grp.crystal-grp-battle { color: var(--crystal-battle); }
+    .crystal-grp-vital, .crystal-ref-grp.crystal-grp-vital { color: var(--crystal-vital); }
+    .crystal-grp-mod, .crystal-ref-grp.crystal-grp-mod { color: var(--crystal-mod); }
+    .crystal-grp-move { color: var(--title-move); }
+    #crystalStatPreview .crystal-preview-label,
+    #titleAchPreview .crystal-preview-label,
+    #trainPreview .crystal-preview-label { display: block; font-weight: 700; color: var(--text-primary); margin-bottom: 2px; }
+    #crystalStatPreview .crystal-preview-stats,
+    #titleAchPreview .crystal-preview-stats,
+    #trainPreview .crystal-preview-stats { display: block; }
+    #crystalStatPreview .crystal-grp,
+    #titleAchPreview .crystal-grp,
+    #trainPreview .crystal-grp { display: block; font-weight: 600; }
+    #crystalStatPreview .crystal-grp + .crystal-grp,
+    #titleAchPreview .crystal-grp + .crystal-grp,
+    #trainPreview .crystal-grp + .crystal-grp { margin-top: 2px; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1 data-i18n="char.title">⚔️ 角色能力計算器</h1>
+    <nav class="header-nav" data-i18n-aria="nav.aria">
+      <a href="StarCG_PriceChecker.html" data-i18n="nav.price">⭐ 市場查價器</a>
+      <a href="StarCG_PetCalculator.html" data-i18n="nav.pet">🐾 寵物成長模擬</a>
+      <a href="https://www.starcg.net/" target="_blank" rel="noopener noreferrer" data-i18n="nav.site">🌐 官網</a>
+      <a href="https://guide.starcg.net/" target="_blank" rel="noopener noreferrer" data-i18n="nav.guide">📖 官方攻略網</a>
+    </nav>
+  </header>
+
+  <div id="loadBar" class="load-bar" data-i18n="char.loadCatalog">⏳ 載入裝備圖鑑…</div>
+  <input type="file" id="equipFileInput" accept=".json,application/json" hidden>
+
+  <div class="grid">
+    <section class="card card-points">
+      <h2 data-i18n="char.params">配點設定</h2>
+      <p class="hint" data-i18n="char.paramsHint">單項上限為可配點數的一半。</p>
+      <div class="status">
+        <div class="status-item"><div class="k" data-i18n="char.pointsAvail">可配點數</div><div class="v" id="pointsAvail">0</div></div>
+        <div class="status-item"><div class="k" data-i18n="char.pointsUsed">已配點數</div><div class="v" id="pointsUsed">0</div></div>
+        <div class="status-item"><div class="k" data-i18n="char.pointsRemain">剩餘</div><div class="v" id="pointsRemain">0</div></div>
+        <div class="status-item"><div class="k" data-i18n="char.singleMax">單項最高</div><div class="v" id="singleMax">0</div></div>
+      </div>
+      <div class="stat-clear-all">
+        <button type="button" class="stat-shortcut-btn" id="clearAllStatsBtn" data-i18n="char.clearStats">清空全配點</button>
+      </div>
+      <div class="field-row level-row">
+        <div class="field"><label data-i18n="char.level">預測等級</label><input type="number" id="level" value="120" min="1" max="200"></div>
+      </div>
+      <div class="field-row points-stat-fields">
+        <div class="field"><div class="field-head"><label for="vit" data-i18n="char.vit">體力</label><div class="stat-shortcuts"><button type="button" class="stat-shortcut-btn" data-stat="vit" data-mode="100">100</button><button type="button" class="stat-shortcut-btn" data-stat="vit" data-mode="max" data-i18n="common.max">滿</button><button type="button" class="stat-shortcut-btn" data-stat="vit" data-mode="remain" data-i18n="common.remain">剩餘</button></div></div><input type="number" id="vit" value="0" min="0"></div>
+        <div class="field"><div class="field-head"><label for="str" data-i18n="char.str">力量</label><div class="stat-shortcuts"><button type="button" class="stat-shortcut-btn" data-stat="str" data-mode="100">100</button><button type="button" class="stat-shortcut-btn" data-stat="str" data-mode="max" data-i18n="common.max">滿</button><button type="button" class="stat-shortcut-btn" data-stat="str" data-mode="remain" data-i18n="common.remain">剩餘</button></div></div><input type="number" id="str" value="0" min="0"></div>
+        <div class="field"><div class="field-head"><label for="def" data-i18n="char.defStat">強度</label><div class="stat-shortcuts"><button type="button" class="stat-shortcut-btn" data-stat="def" data-mode="100">100</button><button type="button" class="stat-shortcut-btn" data-stat="def" data-mode="max" data-i18n="common.max">滿</button><button type="button" class="stat-shortcut-btn" data-stat="def" data-mode="remain" data-i18n="common.remain">剩餘</button></div></div><input type="number" id="def" value="0" min="0"></div>
+        <div class="field"><div class="field-head"><label for="agi" data-i18n="char.agiStat">速度</label><div class="stat-shortcuts"><button type="button" class="stat-shortcut-btn" data-stat="agi" data-mode="100">100</button><button type="button" class="stat-shortcut-btn" data-stat="agi" data-mode="max" data-i18n="common.max">滿</button><button type="button" class="stat-shortcut-btn" data-stat="agi" data-mode="remain" data-i18n="common.remain">剩餘</button></div></div><input type="number" id="agi" value="0" min="0"></div>
+        <div class="field"><div class="field-head"><label for="mag" data-i18n="char.mag">魔法</label><div class="stat-shortcuts"><button type="button" class="stat-shortcut-btn" data-stat="mag" data-mode="100">100</button><button type="button" class="stat-shortcut-btn" data-stat="mag" data-mode="max" data-i18n="common.max">滿</button><button type="button" class="stat-shortcut-btn" data-stat="mag" data-mode="remain" data-i18n="common.remain">剩餘</button></div></div><input type="number" id="mag" value="0" min="0"></div>
+      </div>
+    </section>
+
+    <section class="card bonus-card">
+      <h2 data-i18n="char.bonusSystems">加成系統</h2>
+      <div class="crystal-panel" id="crystalPanel">
+        <h3 class="crystal-title" data-i18n="char.crystal">水晶改造</h3>
+        <div class="bonus-quick-label" data-i18n="char.crystalLevel">水晶等級</div>
+        <div class="crystal-level-quick" id="crystalLevelQuick"></div>
+        <div class="field-row crystal-fields">
+          <div class="field"><label for="crystalRollMode" data-i18n="char.crystalRollMode">區間取値</label><select id="crystalRollMode">
+            <option value="random" data-i18n-opt="common.random">隨機</option>
+            <option value="min" data-i18n-opt="common.min">最低</option>
+            <option value="avg" data-i18n-opt="common.avg">平均</option>
+            <option value="max" data-i18n-opt="common.maxVal">最高</option>
+            <option value="custom" data-i18n-opt="common.custom">自選</option>
+          </select></div>
+        </div>
+        <div class="crystal-roll-actions">
+          <button type="button" class="stat-shortcut-btn" id="crystalRerollBtn" data-i18n="char.crystalReroll">🎲 重骰改造</button>
+          <span class="hint" id="crystalRollHint" style="margin:0" data-i18n="char.crystalHintRoll">變更等級時自動補骰缺少的級數</span>
+        </div>
+        <div id="crystalCustomPanel" class="crystal-custom-panel hidden">
+          <div class="crystal-custom-title" data-i18n="char.crystalCustomTitle">自選詞條（每級擇一，區間取平均）</div>
+          <div id="crystalCustomRows"></div>
+        </div>
+        <div id="crystalStatPreview" class="equip-stat-preview"></div>
+        <div class="crystal-ref-wrap">
+          <details id="crystalRefDetails">
+            <summary data-i18n="char.crystalRefSummary">升級詞條表（每級隨機擇一）</summary>
+            <div id="crystalRefTable" class="crystal-ref-table-wrap"></div>
+          </details>
+        </div>
+      </div>
+      <div class="title-ach-panel" id="titleAchPanel">
+        <h3 class="title-ach-title" data-i18n="char.titleAch">稱號成就</h3>
+        <div class="bonus-quick-label" data-i18n="char.titleAchTier">成就門檻</div>
+        <div class="title-ach-quick" id="titleAchQuick"></div>
+        <div id="titleAchPreview" class="equip-stat-preview title-ach-preview" data-i18n="char.titleAchNone">尚未達到任何成就門檻</div>
+        <div class="title-ach-ref-wrap">
+          <details id="titleAchRefDetails">
+            <summary data-i18n="char.titleAchRefSummary">成就加成一覽（疊加）</summary>
+            <div id="titleAchRefTable" class="title-ach-ref-table-wrap"></div>
+          </details>
+        </div>
+      </div>
+      <div class="train-panel" id="trainPanel">
+        <h3 class="train-title" data-i18n="char.train">修練</h3>
+        <div class="train-actions" id="trainQuick"></div>
+        <div class="train-fields train-stat-blocks hidden" id="trainStatGrid"></div>
+        <div id="trainPreview" class="equip-stat-preview train-preview" data-i18n="char.trainNone">各項皆 Lv0，無加成</div>
+      </div>
+    </section>
+
+    <section class="card card-equip">
+      <div class="equip-layout">
+        <div>
+          <h2 data-i18n="char.equip">裝備模擬</h2>
+          <p class="hint" data-i18n="char.equipHint">點擊欄位從圖鑑選裝備，能力自動帶入。</p>
+          <div class="equip-stage" id="equipStage"></div>
+          <div class="equip-mode-rows">
+            <div class="field-row stat-mode-row">
+              <div class="field"><label data-i18n="char.statModeGeneral">一般屬性（攻防敏回精）</label><select id="statModeGeneral"></select></div>
+              <div class="field"><label data-i18n="char.statModeMod">修正／抗性</label><select id="statModeMod"></select></div>
+            </div>
+            <div class="field-row stat-mode-row">
+              <div class="field"><label data-i18n="char.gem">寶石</label><select id="globalGemDecor"></select></div>
+              <div class="field"><label data-i18n="char.enchant">附魔石</label><select id="globalEnchantMode"></select></div>
+            </div>
+            <div class="equip-extra-options">
+              <button type="button" class="stat-shortcut-btn" id="clearAllEquipsBtn" data-i18n="char.clearEquips">清空全裝備</button>
+              <label><input type="checkbox" id="hyorikiToggle"> <span data-i18n="char.hyoriki">百靈耐（玩家製作／水龍：武器攻、防具防、敏回精 +5%）</span></label>
+            </div>
+          </div>
+          <div id="equipStatPreview" class="equip-stat-preview" data-i18n="char.equipPreviewHint">游標指向已裝備欄位或寶石／附魔石可預覽效果</div>
+        </div>
+        <div class="results-column">
+          <h2 data-i18n="char.results">能力結果</h2>
+          <div class="result-block">
+            <h3 data-i18n="char.basicResults">基本值</h3>
+            <div class="result-list" id="basicResults"></div>
+          </div>
+          <div class="result-block">
+            <h3 data-i18n="char.modResults">修正與抗值</h3>
+            <div class="result-mod-stack">
+              <div class="result-list mod-correct" id="correctResults"></div>
+              <div class="result-list mod-resist" id="resistResults"></div>
+            </div>
+          </div>
+          <div id="customStatPanel" class="custom-stat-panel hidden"></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <section class="card" style="margin-top:16px">
+    <h2 data-i18n="char.compare">比較清單</h2>
+    <div class="field-row">
+      <div class="field"><label data-i18n="common.name">名稱</label><input type="text" id="buildName" data-i18n-placeholder="common.unnamed" placeholder="未命名"></div>
+      <div class="field" style="display:flex;align-items:flex-end"><button type="button" id="addBuildBtn" data-i18n="char.addCompare">➕ 加入比較清單</button></div>
+    </div>
+    <div class="compare-wrap">
+      <table class="compare" id="compareTable">
+        <thead><tr>
+          <th data-i18n="common.name">名稱</th><th data-i18n="common.lv">Lv</th>
+          <th data-i18n="stat.hp">生命</th><th data-i18n="stat.mp">魔力</th>
+          <th data-i18n="stat.atk">攻擊</th><th data-i18n="stat.def">防禦</th><th data-i18n="stat.agi">敏捷</th><th data-i18n="stat.rec">回復</th><th data-i18n="stat.spt">精神</th><th data-i18n="stat.matk">魔攻</th><th data-i18n="stat.amres">魔抗</th>
+          <th data-i18n="stat.crit">必殺</th><th data-i18n="stat.hit">命中</th><th data-i18n="stat.counter">反擊</th><th data-i18n="stat.dodge">閃躲</th>
+          <th data-i18n="stat.poison">中毒</th><th data-i18n="stat.stone">石化</th><th data-i18n="stat.drunk">酒醉</th><th data-i18n="stat.sleep">昏睡</th><th data-i18n="stat.chaos">混亂</th><th data-i18n="stat.forget">遺忘</th><th></th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<div id="pickerModal" class="modal hidden">
+  <div class="modal-card picker-dialog">
+    <div class="modal-header" id="pickerTitle"></div>
+    <div class="modal-body">
+      <p class="hint picker-hint" id="pickerHint" data-i18n="char.picker.hintEquip">游標指向裝備可查看屬性（依「裝備數值」設定）。</p>
+      <div id="pickerStatPreview" class="picker-stat-preview">—</div>
+      <div class="picker-layout">
+        <div id="pickerSubTabs" class="picker-sub-tabs"></div>
+        <div id="pickerGrid" class="picker-grid-wrap"></div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="secondary" id="pickerClearBtn" data-i18n="char.picker.clearSlot">清除此欄</button>
+      <button type="button" class="secondary" id="pickerCloseBtn" data-i18n="char.picker.close">關閉</button>
+    </div>
+  </div>
+</div>
+
+<script src="starcg_i18n.js"></script>
+<script src="starcg_game_names.js"></script>
+<script src="starcg_i18n_char_pet.js?v=20260804l"></script>
+<script src="starcg_i18n_messages.js"></script>
+<script src="gems_data.js"></script>
+<script src="equipment_catalog.js?v=20260730" async id="equipCatalogScript"></script>
+<script>
+const REPO_RAW = 'https://raw.githubusercontent.com/wodenchen/StarCG/main/';
+const GUIDE_EQUIP_URL = 'https://guide.starcg.net/equipment/';
+const GUIDE_IMAGE_BASE = 'https://guide.starcg.net';
+const CORS_PROXIES = ['https://corsproxy.io/?url=', 'https://api.allorigins.win/raw?url='];
+
+function t(key, params) { return StarCG_I18N.t(key, params); }
+function statLabel(k) { return StarCG_I18N.stat(k); }
+function gn(name) { return StarCG_I18N.displayGameName(name); }
+
+const CATEGORY_LABEL_OVERRIDES = { 'princess-legend': '公主傳說' };
+
+function getCategoryLabel(k) {
+  const key = 'char.cat.' + k;
+  const text = t(key);
+  if (text !== key) return text;
+  return CATEGORY_LABEL_OVERRIDES[k] || k;
+}
+
+const SLOT_CATEGORY_ORDER = {
+  weapon: ['sword','axe','spear','bow','staff','dagger','boomerang','super-artifact','forest','water-dragon'],
+  hat: ['helmet','hat','headwear','fudan','water-dragon'],
+  body: ['armor','clothes','robe','princess-legend','fudan','water-dragon'],
+  shoes: ['boots','shoes','fudan','water-dragon'],
+  shield: ['shield','fudan','water-dragon'],
+  acc: ['ring','necklace','earring','bracelet','amulet','headband','instrument'],
+};
+
+const WATER_DRAGON_NAMES = new Set([
+  '水龍之劍','水龍之斧','水龍之槍','水龍之弓','水龍之杖','水龍的小刀','冰龍',
+  '水龍之盔','水龍之帽','水龍鎧甲','水龍之服','水龍法袍','水龍之靴','水龍之鞋','水龍之盾',
+]);
+
+const PRINCESS_LEGEND_NAMES = new Set([
+  '血盟之衣','禍害之裳','無情之裳','凜冽之裳','炙熱之裳',
+  '大地之裳','海洋之裳','火焰之裳','雲群之裳','結界之裳','城堡之裳','魔消之裳','兵消之裳','魔靈之裳','戰靈之裳','氤氳之裳',
+]);
+
+const PICKER_NAME_ORDER = (() => {
+  const map = {};
+  const reg = (cat, names) => names.forEach((name, i) => { map[`${cat}|${name}`] = i; });
+  reg('sword', ['長劍','闊劍','突刺劍','火舌劍','麵包劍','雙手劍','雙刃長劍','鎖刃劍','格鬥劍','長鍔劍','黑作太刀','豬牙劍','雙刃闊劍','巨劍','長軍刀','護身短劍','細柄短劍','長軍刀+','細刃重劍','剛硬巨劍','青龍刀','曲刀','彎勾劍','剛毅']);
+  reg('axe', ['手斧','勇氣之斧','寬手斧','戰鬥手斧','格鬥手斧','鋼斧','長戰斧','雙刃斧','鉤爪斧','闊刃斧','鑽保雷格之斧','彎月大戰斧','大型闊刃斧','大型雙刃斧','超大皇帝斧','新月斧','米諾陶斯戰斧','大型雙刃斧+','薄刃鉤爪斧','彎月長柄斧','金屬重斧','處刑斧','高速斧','重擊斧']);
+  reg('spear', ['短矛','攻城槍','刺槍','金屬槍','長柄彎槍','長柄尖槍','穗槍','雙叉戟','護衛槍','騎士槍','偃月刀','大砍槍','長尖槍','蠍槍','雙刃槍','闊刃槍','東方長刺鎗','蠍槍+','鉤爪槍','原始槍','三叉戰戟','異型槍','痛擊槍','穿刺槍']);
+  reg('bow', ['輕型弓','威力短弓','短戰弓','獵弓','強弓','格鬥弓','狙擊弓','超強狙擊弓','殺手長弓','衝擊弓','米斯特汀之弓','巨弓','長格鬥弓','破邪長弓','月光長弓','原始石弓','重弦弓','月光長弓+','平行弓','靈魂之弓','摘星之弓','魔彈','調和之弓','月之弓']);
+  reg('staff', ['短杖','權杖','大地之杖','激流權杖','魔之手杖','魔之權杖','賢者手杖','賢者權杖','琥珀杖','琥珀權杖','魔晶之杖','元素之杖','神聖之杖','怒音之杖','隱者之杖','光明短杖','惡魔之杖','落雷權杖+','太陽短杖','天使之杖','聖者之杖','星屑短杖','王者之手','星錘杖']);
+  reg('dagger', ['小刀','銳刃小刀','圓盤小刀','細刃擲刀','滑翔小刀','細直刃小刀','耳柄小刀','騎士小刀','球鍔小刀','雙刃小刀','忍者飛鏢','闊刃小刀','觸角小刀','漢拉提小刀','凶殺刀','切肉小刀','古傳小刀','疾速短刀+','華麗小刀','手裡劍','勾爪擲刀','幻之匕首','破滅刀','凶殘刀']);
+  reg('boomerang', ['木製大型回力鏢','青銅回力鏢','追跡者','彩光回力鏢','暗殺回力鏢','殺敵回力鏢','獅子回力鏢','銳角回力鏢','翼鹿回力鏢','阿修塔羅回力鏢','北斗之鎌刀','蛇獅回力鏢','鶇回力鏢','雄翼牛回力鏢','閃光回力鏢','凶豹回力鏢','赤獅回力鏢','熊翼牛回力鏢+','天使之翼','普利辛回力鏢','治癒回力鏢','天秤回力鏢','基盤飛鏢','節制飛鏢']);
+  reg('helmet', ['硬皮頭盔','銅制頭盔','鐵板布盔','銅鐵皮盔','金屬護額','鐵制頭盔','霸葛頭盔','角飾頭盔','開放式頭盔','葛理克頭盔','聖騎士之盔','巴比克頭盔','利刃頭盔','騎士頭盔','鋼制頭盔','博流蓋爾頭盔','鉚釘頭盔','鋼制頭盔+','羽毛頭盔','龍盔','白金頭盔','聖龍頭盔','正義頭盔','靈力頭盔']);
+  reg('hat', ['麻布帽','硬帽','輕帽','皮帽','硬皮帽','可愛的帽子','時髦帽子','鴨舌帽','藍徽章之帽','高級帽子','劍客帽','裝飾著花的帽子','青銅帽子','淑女帽','可愛的扁帽子','軍帽','時髦避暑帽','可愛的扁帽子+','羽毛帽','魔術師之帽','黃昏之帽','妖精之帽','貝斯神帽','神官帽']);
+  reg('armor', ['軟皮甲','護心甲','青銅鎧甲','輕型鎧甲','輕型鎖鍊甲','環甲','鋼鐵鎧甲','金屬皮甲','長型金屬鎧甲','索狀鎧甲','劍齒鎧甲','重鐵板甲','鐵板半身甲','實戰鎧甲','黃金鎧甲','重金屬鎧甲','野獸之鎧','實戰鎧甲+','帝王之鎧','亡靈鎧甲','漆黑之鎧','騎士鎧甲','紅繩威鎧','守護鎧甲']);
+  reg('clothes', ['旅人之服','保護衣','羽毛裝','皮裝','硬皮服','鎖鏈裝','布甲','櫬甲','環服','士兵護衣','功夫裝','長索錐衣','索錐上衣','骨衣','超級衣服','疾風之衣','步兵戰衣','獸骨之衣+','勇者之衣','女神之衣','不死鳥之服','靈魂之服','海洋之服','幻想之服']);
+  reg('robe', ['羽毛袍','輕皮袍','網袍','風袍','硬皮袍','環袍','烏鴉之袍','月亮之袍','狐皮披風','東方法衣','聖堂之袍','治癒之袍','聖者之袍','戰鬥長袍','冠軍之袍','時之袍','死神之袍','勇者之袍','潔淨之袍+','黑暗之袍','聖袍','靈魂之袍','奇蹟之袍','共鳴之袍','和平之袍']);
+  reg('boots', ['軟皮靴','皮靴','硬皮靴','長靴','厚底靴','編織的靴子','鎖鏈長靴','鎖鏈靴','蜥蜴靴','蜥蜴長靴','防護靴','鋼靴','鋼制長靴','水晶靴','銀靴','流水之靴','芙蕾雅之靴','標準長靴+','鑽石靴','鑽石長靴','秘密之靴','龍之靴','幸運靴','試力鞋']);
+  reg('shoes', ['運動鞋','馬車鞋','皮鞋','安全鞋','光之鞋','戰鞋','薄板鞋','鎖鏈鞋','蜥蜴鞋','維京鞋','特製舞鞋','戰鬥鞋','騎士鞋','妖精鞋','紫水晶鞋','白金鞋','精緻高根鞋','妖精鞋+','神秘之鞋','力量之鞋','黃金鞋','龍之鞋','守護之鞋','大木屐']);
+  reg('shield', ['小圓盾','小型盾','板盾','鳶盾','漩渦重盾','哥特盾','士兵盾','重盾','蜥蜴盾','反光之盾','聖者之盾','風之盾','獅子盾','防守之盾','黃金之盾','鏡之盾','力量之盾','防禦之盾+','漆黑之盾','火龍之盾','黑暗之盾','勇者之盾','突猛盾','重型防御盾']);
+  reg('water-dragon', [...WATER_DRAGON_NAMES]);
+  reg('princess-legend', [...PRINCESS_LEGEND_NAMES]);
+  return map;
+})();
+
+function formatItemDisplayName(item) {
+  if (!item) return '';
+  return escapeHtml(gn(item.name));
+}
+
+function getPickerCategory(it) {
+  if (it.categorySlug === 'water-dragon' || WATER_DRAGON_NAMES.has(it.name)) return 'water-dragon';
+  if (it.categorySlug === 'princess-legend' || PRINCESS_LEGEND_NAMES.has(it.name)) return 'princess-legend';
+  return it.categorySlug;
+}
+
+function pickerSortKey(it) {
+  const cat = getPickerCategory(it);
+  return PICKER_NAME_ORDER[`${cat}|${it.name}`] ?? PICKER_NAME_ORDER[`${it.categorySlug}|${it.name}`] ?? null;
+}
+
+const STAT_LABELS = new Proxy({}, { get: (_, k) => statLabel(k) });
+
+const COMPARE_KEYS = ['hp','mp','atk','def','agi','rec','spt','matk','amres','crit','hit','counter','dodge','poison','stone','drunk','sleep','chaos','forget'];
+const COMPARE_FROM_SUM = new Set(['hp','mp','atk','def','agi','rec','spt','matk','amres']);
+/** 能力結果基本值排版：生命魔力／攻擊回復／防禦精神／敏捷魔攻／魔抗 */
+const RESULT_BASIC_KEYS = ['hp', 'mp', 'atk', 'rec', 'def', 'spt', 'agi', 'matk', 'amres'];
+const RESULT_MOD_CORRECT_KEYS = ['crit', 'counter', 'hit', 'dodge'];
+const RESULT_MOD_RESIST_KEYS = ['poison', 'sleep', 'stone', 'drunk', 'chaos', 'forget'];
+const RESULT_MOD_KEYS = [...RESULT_MOD_CORRECT_KEYS, ...RESULT_MOD_RESIST_KEYS];
+const BASIC_KEYS = [...RESULT_BASIC_KEYS, 'charm'];
+const MOD_KEYS = [...RESULT_MOD_KEYS];
+const HYORIKI_RATE = 1.05;
+
+const CRYSTAL_BASE = { hp: 10, mp: 10, atk: 1, def: 1, agi: 1 };
+/** Lv N → N+1 的可選能力（每級隨機一條） */
+const CRYSTAL_UPGRADE_TIERS = [
+  [
+    { key: 'atk', min: 6, max: 8 }, { key: 'def', min: 6, max: 8 }, { key: 'agi', min: 6, max: 8 },
+    { key: 'hp', min: 25, max: 30 }, { key: 'mp', min: 25, max: 30 },
+    { key: 'spt', min: 3, max: 3 }, { key: 'rec', min: 3, max: 3 },
+  ],
+  [
+    { key: 'atk', min: 8, max: 10 }, { key: 'def', min: 8, max: 10 }, { key: 'agi', min: 8, max: 10 },
+    { key: 'hp', min: 35, max: 40 }, { key: 'mp', min: 35, max: 40 },
+    { key: 'spt', min: 4, max: 4 }, { key: 'rec', min: 4, max: 4 },
+  ],
+  [
+    { key: 'atk', min: 10, max: 12 }, { key: 'def', min: 10, max: 12 }, { key: 'agi', min: 10, max: 12 },
+    { key: 'hp', min: 45, max: 50 }, { key: 'mp', min: 45, max: 50 },
+    { key: 'spt', min: 5, max: 5 }, { key: 'rec', min: 5, max: 5 },
+    { key: 'crit', min: 1, max: 1 }, { key: 'dodge', min: 1, max: 1 },
+    { key: 'hit', min: 1, max: 1 }, { key: 'counter', min: 1, max: 1 },
+  ],
+  [
+    { key: 'atk', min: 12, max: 14 }, { key: 'def', min: 12, max: 14 }, { key: 'agi', min: 12, max: 14 },
+    { key: 'hp', min: 55, max: 60 }, { key: 'mp', min: 55, max: 60 },
+    { key: 'spt', min: 6, max: 6 }, { key: 'rec', min: 6, max: 6 },
+    { key: 'crit', min: 1, max: 1 }, { key: 'dodge', min: 1, max: 2 },
+    { key: 'hit', min: 1, max: 1 }, { key: 'counter', min: 1, max: 2 },
+  ],
+  [
+    { key: 'atk', min: 14, max: 16 }, { key: 'def', min: 14, max: 16 }, { key: 'agi', min: 14, max: 16 },
+    { key: 'hp', min: 65, max: 70 }, { key: 'mp', min: 65, max: 70 },
+    { key: 'spt', min: 7, max: 7 }, { key: 'rec', min: 7, max: 7 },
+    { key: 'crit', min: 1, max: 1 }, { key: 'dodge', min: 2, max: 2 },
+    { key: 'hit', min: 1, max: 1 }, { key: 'counter', min: 2, max: 2 },
+  ],
+  [
+    { key: 'atk', min: 17, max: 19 }, { key: 'def', min: 17, max: 19 }, { key: 'agi', min: 17, max: 19 },
+    { key: 'hp', min: 75, max: 80 }, { key: 'mp', min: 75, max: 80 },
+    { key: 'spt', min: 9, max: 9 }, { key: 'rec', min: 9, max: 9 },
+    { key: 'crit', min: 2, max: 2 }, { key: 'dodge', min: 1, max: 2 },
+    { key: 'hit', min: 2, max: 2 }, { key: 'counter', min: 1, max: 2 },
+  ],
+  [
+    { key: 'atk', min: 20, max: 22 }, { key: 'def', min: 20, max: 22 }, { key: 'agi', min: 20, max: 22 },
+    { key: 'hp', min: 85, max: 95 }, { key: 'mp', min: 85, max: 90 },
+    { key: 'spt', min: 11, max: 11 }, { key: 'rec', min: 11, max: 11 },
+    { key: 'crit', min: 1, max: 1 }, { key: 'dodge', min: 1, max: 1 },
+    { key: 'hit', min: 1, max: 1 }, { key: 'counter', min: 1, max: 1 },
+  ],
+  [
+    { key: 'atk', min: 22, max: 26 }, { key: 'def', min: 22, max: 26 }, { key: 'agi', min: 22, max: 26 },
+    { key: 'hp', min: 95, max: 100 }, { key: 'mp', min: 95, max: 100 },
+    { key: 'spt', min: 13, max: 13 }, { key: 'rec', min: 13, max: 13 },
+    { key: 'crit', min: 1, max: 2 }, { key: 'dodge', min: 1, max: 2 },
+    { key: 'hit', min: 1, max: 2 }, { key: 'counter', min: 1, max: 2 },
+  ],
+  [
+    { key: 'atk', min: 26, max: 30 }, { key: 'def', min: 26, max: 30 }, { key: 'agi', min: 26, max: 30 },
+    { key: 'hp', min: 110, max: 120 }, { key: 'mp', min: 110, max: 120 },
+    { key: 'spt', min: 16, max: 16 }, { key: 'rec', min: 16, max: 16 },
+    { key: 'crit', min: 2, max: 2 }, { key: 'dodge', min: 2, max: 2 },
+    { key: 'hit', min: 2, max: 2 }, { key: 'counter', min: 2, max: 2 },
+  ],
+];
+let crystalRolls = Array(9).fill(null);
+
+const CRYSTAL_REF_LABELS = new Proxy({}, { get: (_, k) => statLabel(k) });
+
+const CRYSTAL_STAT_GROUPS = [
+  { cls: 'crystal-grp-battle', labelKey: 'char.crystalGrpBattle', keys: ['atk', 'def', 'agi'] },
+  { cls: 'crystal-grp-vital', labelKey: 'char.crystalGrpVital', keys: ['hp', 'mp', 'spt', 'rec'] },
+  { cls: 'crystal-grp-mod', labelKey: 'char.crystalGrpMod', keys: ['crit', 'counter', 'hit', 'dodge'] },
+];
+
+function getCrystalRollMode() {
+  return document.getElementById('crystalRollMode')?.value || 'random';
+}
+
+function crystalRollValueMode(mode) {
+  return mode === 'custom' ? 'avg' : mode;
+}
+
+function crystalGroupClass(key) {
+  return CRYSTAL_STAT_GROUPS.find(g => g.keys.includes(key))?.cls || '';
+}
+
+function formatCrystalRefOption(opt) {
+  const name = CRYSTAL_REF_LABELS[opt.key] || STAT_LABELS[opt.key] || opt.key;
+  if (opt.min === opt.max) return `${name} +${opt.min}`;
+  return `${name} +${opt.min}~${opt.max}`;
+}
+
+function formatCrystalRefRowCells(opts) {
+  const buckets = Object.fromEntries(CRYSTAL_STAT_GROUPS.map(g => [g.cls, []]));
+  for (const o of opts) {
+    const cls = crystalGroupClass(o.key);
+    if (cls) buckets[cls].push(o);
+  }
+  return CRYSTAL_STAT_GROUPS.map(g => {
+    if (!buckets[g.cls].length) return '<span class="crystal-ref-empty">—</span>';
+    const lines = buckets[g.cls].map(o => escapeHtml(formatCrystalRefOption(o))).join('<br>');
+    return `<span class="crystal-ref-grp ${g.cls}">${lines}</span>`;
+  });
+}
+
+function renderCrystalRefRow(levelLabel, opts) {
+  const [battle, vital, mod] = formatCrystalRefRowCells(opts);
+  return `<tr><th>${levelLabel}</th><td>${battle}</td><td>${vital}</td><td>${mod}</td></tr>`;
+}
+
+function renderCrystalRefTable() {
+  const el = document.getElementById('crystalRefTable');
+  if (!el) return;
+  const baseRow = renderCrystalRefRow(
+    `1<span class="crystal-ref-lvl-sub">${t('char.crystalRefStart')}</span>`,
+    Object.entries(CRYSTAL_BASE).map(([key, val]) => ({ key, min: val, max: val }))
+  );
+  const tierRows = CRYSTAL_UPGRADE_TIERS.map((tier, i) =>
+    renderCrystalRefRow(`${i + 1}→${i + 2}`, tier)
+  ).join('');
+  el.innerHTML = `<table class="crystal-ref-table"><thead><tr>
+    <th>${t('char.crystalRefUpgrade')}</th>
+    <th class="crystal-grp-battle">${t('char.crystalGrpBattle')}</th>
+    <th class="crystal-grp-vital">${t('char.crystalGrpVital')}</th>
+    <th class="crystal-grp-mod">${t('char.crystalGrpMod')}</th>
+  </tr></thead><tbody>${baseRow}${tierRows}</tbody></table>`;
+}
+
+const RESIST_KEYS = ['poison','sleep','stone','drunk','chaos','forget'];
+const CORRECT_KEYS = ['crit','counter','hit','dodge'];
+
+/** 稱號成就加成（疊加；need = 稱號數量門檻） */
+const TITLE_ACHIEVEMENT_TIERS = [
+  { need: 5, bonuses: { atk: 5, def: 5, agi: 5 } },
+  { need: 10, bonuses: { spt: 4, mp: 40 } },
+  { need: 15, bonuses: { rec: 4, hp: 40 } },
+  { need: 20, bonuses: Object.fromEntries(RESIST_KEYS.map(k => [k, 1])), allResist: true },
+  { need: 25, bonuses: { agi: 10, spt: 4 } },
+  { need: 30, bonuses: { def: 10, rec: 4 } },
+  { need: 35, bonuses: { atk: 10, spt: 4 } },
+  { need: 40, bonuses: { dodge: 1, hit: 1, crit: 1, counter: 1 } },
+  { need: 45, bonuses: {}, moveSpeedPct: 5 },
+  { need: 50, bonuses: { dodge: 1, hit: 1, crit: 1, counter: 1 } },
+  { need: 55, bonuses: { spt: 6, mp: 60 } },
+  { need: 60, bonuses: { rec: 6, hp: 60 } },
+  { need: 65, bonuses: { atk: 10, def: 10, agi: 10 } },
+  { need: 70, bonuses: { dodge: 1, hit: 1, crit: 1, counter: 1 } },
+];
+const TITLE_ACH_QUICK = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70];
+const CRYSTAL_LEVEL_QUICK = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+let crystalLevel = 1;
+let titleCount = 0;
+const TRAIN_KEYS = [...CORRECT_KEYS, ...RESIST_KEYS];
+let trainLevels = Object.fromEntries(TRAIN_KEYS.map(k => [k, 0]));
+let trainCustomOpen = false;
+const PICKER_FLAT_CATEGORIES = new Set(['fudan', 'water-dragon', 'princess-legend', ...SLOT_CATEGORY_ORDER.acc]);
+const PICKER_STAT_GROUP_LABELS = { basic: 'char.picker.basic', extra: 'char.picker.extra' };
+const STAT_MODE_OPTIONS = [
+  { value: 'max', labelKey: 'char.mode.max', ratio: 1 },
+  { value: 'near', labelKey: 'char.mode.near', ratio: 0.9 },
+  { value: 'high', labelKey: 'char.mode.high', ratio: 0.8 },
+  { value: 'avg', labelKey: 'char.mode.avg', ratio: 0.5 },
+  { value: 'custom', labelKey: 'char.mode.custom', ratio: null },
+];
+const STAT_MODE_RATIOS = Object.fromEntries(STAT_MODE_OPTIONS.filter(o => o.ratio != null).map(o => [o.value, o.ratio]));
+
+/** 標籤語意：頂值 × 比例（近頂 90% / 中上 80% / 平均 50%），不是 min~max 線性插值 */
+function resolveScaledByMode(min, max, mode) {
+  if (min === max) return min;
+  const ratio = STAT_MODE_RATIOS[mode];
+  if (ratio == null || ratio >= 1) return max;
+  return Math.round(max * ratio);
+}
+
+const CATEGORY_MOD_IGNORE = {
+  dagger: ['crit'], axe: ['crit'],
+  spear: ['counter', 'hit'],
+  hat: ['hit'],
+  clothes: ['dodge'],
+};
+const NEG_DODGE_BASELINE_CATS = new Set(['helmet', 'armor', 'shield']);
+
+const CONTRIB = {
+  vit: { hp:8, mp:1, atk:0.1, def:0.1, agi:0.1, spt:-0.3, rec:0.8 },
+  str: { hp:2, mp:2, atk:2, def:0.2, agi:0.2, spt:-0.1, rec:-0.1 },
+  def: { hp:3, mp:2, atk:0.2, def:2, agi:0.2, spt:0.2, rec:-0.1 },
+  agi: { hp:3, mp:2, atk:0.2, def:0.2, agi:2, spt:-0.1, rec:0.2 },
+  mag: { hp:1, mp:10, atk:0.1, def:0.1, agi:0.1, spt:0.8, rec:-0.3 },
+};
+const BASE = { hp:20, mp:20, atk:20, def:20, agi:20, spt:100, rec:100 };
+
+const SLOTS = [
+  { id:'acc1', labelKey:'char.slot.acc1', calcSlots:['acc'] },
+  { id:'hat', labelKey:'char.slot.hat', calcSlots:['hat'] },
+  { id:'acc2', labelKey:'char.slot.acc2', calcSlots:['acc'] },
+  { id:'weapon', labelKey:'char.slot.weapon', calcSlots:['weapon'] },
+  { id:'shield', labelKey:'char.slot.shield', calcSlots:['shield'] },
+  { id:'body', labelKey:'char.slot.body', calcSlots:['body'] },
+  { id:'shoes', labelKey:'char.slot.shoes', calcSlots:['shoes'] },
+];
+function slotLabel(s) { return t(s.labelKey); }
+
+let catalog = [];
+let catalogLoadError = null;
+let loadBarPendingKey = 'char.loadCatalog';
+let equips = Object.fromEntries(SLOTS.map(s => [s.id, null]));
+let pickerSlot = null;
+let pickerMode = 'equip';
+let pickerActiveCat = null;
+let pickerListCache = [];
+let compareList = [];
+let equipCustomStats = {};
+let customPanelSignature = '';
+let globalGemDecor = 'avg';
+let globalEnchantMode = 'max';
+let slotDecorations = Object.fromEntries(SLOTS.map(s => [s.id, {
+  gemType: '', gemLevel: 5, enchantType: '', enchantLevel: 5,
+}]));
+
+const DECOR_SIDE = { hat: 'top', weapon: 'left', shield: 'right', body: 'bottom', shoes: 'bottom' };
+
+const GEM_MODE_OPTIONS = [
+  { value: 'max', labelKey: 'char.gemMode.max' },
+  { value: 'near', labelKey: 'char.gemMode.near' },
+  { value: 'high', labelKey: 'char.gemMode.high' },
+  { value: 'avg', labelKey: 'char.gemMode.avg' },
+  { value: 'min', labelKey: 'char.gemMode.min' },
+];
+
+const GLOBAL_GEM_OPTIONS = GEM_MODE_OPTIONS.map(o => ({ value: o.value, mode: o.value, labelKey: o.labelKey }));
+
+function getGlobalGemSettings() {
+  const opt = GLOBAL_GEM_OPTIONS.find(o => o.value === globalGemDecor) || GLOBAL_GEM_OPTIONS.find(o => o.value === 'avg');
+  return { gemApply: 'decorate', gemMode: opt.mode, label: t(opt.labelKey) };
+}
+
+function effectiveDecor(slotId) {
+  const { gemApply, gemMode } = getGlobalGemSettings();
+  return { ...slotDecorations[slotId], gemApply, gemMode, enchantMode: globalEnchantMode };
+}
+
+function getGlobalDecorHint(kind) {
+  if (kind === 'gem') return getGlobalGemSettings().label;
+  return STAT_MODE_OPTIONS.find(o => o.value === globalEnchantMode)?.labelKey
+    ? t(STAT_MODE_OPTIONS.find(o => o.value === globalEnchantMode).labelKey)
+    : globalEnchantMode;
+}
+
+function gd() { return window.GEMS_DATA; }
+
+function canGemSlot(slotId) {
+  return gd().GEM_SLOT_IDS.includes(slotId);
+}
+
+function getValidEnchants(slotId) {
+  return Object.entries(gd().ENCHANT_SLOT_RULES)
+    .filter(([, slots]) => slots.includes(slotId))
+    .map(([k]) => k);
+}
+
+function getGemRatio(decor) {
+  if (decor.gemApply === 'craft') return 1;
+  return gd().GEM_DECORATE_RATIOS[decor.gemMode] ?? 1;
+}
+
+function scaleGem(n, ratio) {
+  if (!n) return 0;
+  return n > 0 ? Math.floor(n * ratio) : Math.ceil(n * ratio);
+}
+
+function resolveGemEffectValue(val, mode) {
+  if (!Array.isArray(val)) return val;
+  const [min, max] = val;
+  // 寶石「最低」取區間下限；其餘與裝備相同：頂值 × 模式比例，再乘打洞倍率
+  if (mode === 'min') return min;
+  return resolveScaledByMode(min, max, mode);
+}
+
+function applyGemEffectObject(out, baseStats, eff, mode, ratio) {
+  const pick = (v) => scaleGem(resolveGemEffectValue(v, mode), ratio);
+  const pct = (base, p) => scaleGem(base * p / 100, ratio);
+  if (eff.crit != null) out.crit += pick(eff.crit);
+  if (eff.counter != null) out.counter += pick(eff.counter);
+  if (eff.hit != null) out.hit += pick(eff.hit);
+  if (eff.dodge != null) out.dodge += pick(eff.dodge);
+  if (eff.hp != null) out.hp += pick(eff.hp);
+  if (eff.mp != null) out.mp += pick(eff.mp);
+  if (eff.def != null) out.def += pick(eff.def);
+  if (eff.atk != null) out.atk += pick(eff.atk);
+  if (eff.agi != null) out.agi += pick(eff.agi);
+  if (eff.rec != null) out.rec += pick(eff.rec);
+  if (eff.spt != null) out.spt += pick(eff.spt);
+  if (eff.atkPct) out.atk += pct(baseStats.atk, eff.atkPct);
+  if (eff.defPct) out.def += pct(baseStats.def, eff.defPct);
+  if (eff.allPct) {
+    for (const k of ['hp', 'mp', 'atk', 'def', 'agi', 'spt', 'rec']) {
+      if (baseStats[k]) out[k] += pct(baseStats[k], eff.allPct);
+    }
+  }
+  if (eff.critPct && baseStats.crit) out.crit += pct(baseStats.crit, eff.critPct);
+  if (eff.hitPct && baseStats.hit) out.hit += pct(baseStats.hit, eff.hitPct);
+  if (eff.amresPct && baseStats.amres) out.amres += pct(baseStats.amres, eff.amresPct);
+  if (eff.dodgeMult && baseStats.dodge) {
+    out.dodge += Math.floor(baseStats.dodge * (eff.dodgeMult - 1) * ratio);
+  }
+}
+
+function applyGemBonus(baseStats, decor, slotId) {
+  const out = emptyEquipStats();
+  if (!decor.gemType || !canGemSlot(slotId)) return out;
+  const ratio = getGemRatio(decor);
+  const mode = decor.gemMode || 'max';
+  if (gd().isQuestGem(decor.gemType)) {
+    const q = gd().QUEST_GEMS[decor.gemType];
+    const eff = slotId === 'weapon' ? q.weapon : q.armor;
+    if (eff) applyGemEffectObject(out, baseStats, eff, mode, ratio);
+    return out;
+  }
+  const eff = (slotId === 'weapon' ? gd().GEM_WEAPON : gd().GEM_ARMOR)[decor.gemType]?.[decor.gemLevel - 1];
+  if (!eff) return out;
+  applyGemEffectObject(out, baseStats, eff, mode, ratio);
+  return out;
+}
+
+function resolveEnchantValue(type, level, mode) {
+  const range = gd().ENCHANT_RANGES[type]?.[level - 1];
+  if (!range) return 0;
+  const [min, max] = range;
+  return resolveScaledByMode(min, max, mode);
+}
+
+function applyEnchantBonus(decor, slotId) {
+  const out = emptyEquipStats();
+  if (!decor.enchantType || !gd().ENCHANT_SLOT_RULES[decor.enchantType]?.includes(slotId)) return out;
+  const key = gd().ENCHANT_STAT_KEY[decor.enchantType];
+  out[key] = resolveEnchantValue(decor.enchantType, decor.enchantLevel, decor.enchantMode);
+  return out;
+}
+
+function resolveSlotStats(item, slotId) {
+  const { general, mod } = getStatModes();
+  const base = resolveEquipStats(item, general, mod, equipCustomStats[slotId], slotId);
+  const decor = effectiveDecor(slotId);
+  const gem = applyGemBonus(base, decor, slotId);
+  const out = { ...base };
+  for (const k of Object.keys(out)) out[k] += gem[k] || 0;
+  const enchant = applyEnchantBonus(decor, slotId);
+  for (const k of Object.keys(out)) out[k] += enchant[k] || 0;
+  return out;
+}
+
+function decorSlotPickerItem(slotId, kind) {
+  const decor = slotDecorations[slotId];
+  if (kind === 'gem') {
+    if (!decor.gemType) return null;
+    return { pickerKind: 'gem', gemType: decor.gemType, gemLevel: decor.gemLevel };
+  }
+  if (!decor.enchantType) return null;
+  return { pickerKind: 'enchant', enchantType: decor.enchantType, enchantLevel: decor.enchantLevel };
+}
+
+function getDecorSlotImageUrl(slotId, kind) {
+  const item = decorSlotPickerItem(slotId, kind);
+  return item ? gd().decorPickerImageUrl(item) : '';
+}
+
+function getDecorBtnLabel(slotId, kind) {
+  const decor = slotDecorations[slotId];
+  if (kind === 'gem') {
+    if (!decor.gemType) return '';
+    if (gd().isQuestGem(decor.gemType)) return gn(gd().QUEST_GEMS[decor.gemType].label);
+    return `${gn(gd().GEM_TYPE_LABELS[decor.gemType])} Lv${decor.gemLevel}`;
+  }
+  if (!decor.enchantType) return '';
+  const name = getEnchantCategoryLabel(decor.enchantType);
+  return `${name} Lv${decor.enchantLevel}`;
+}
+
+function getDecorDisplayName(slotId, kind) {
+  return getDecorBtnLabel(slotId, kind) || '';
+}
+
+function formatDecorEffectPreview(slotId, kind) {
+  const item = equips[slotId];
+  const decor = effectiveDecor(slotId);
+  const name = getDecorDisplayName(slotId, kind);
+  if (!item || !name) return null;
+  const { general, mod } = getStatModes();
+  const base = resolveEquipStats(item, general, mod, equipCustomStats[slotId], slotId);
+  const stats = kind === 'gem'
+    ? applyGemBonus(base, decor, slotId)
+    : applyEnchantBonus(decor, slotId);
+  const detail = formatStatLine(stats);
+  return { name, detail, applyHint: getGlobalDecorHint(kind) };
+}
+
+function setDecorEffectPreview(slotId, kind) {
+  const el = document.getElementById('equipStatPreview');
+  const preview = formatDecorEffectPreview(slotId, kind);
+  if (!preview) {
+    el.classList.remove('active');
+    el.textContent = equips[slotId]
+      ? (kind === 'gem' ? t('char.decor.noGem') : t('char.decor.noEnchant'))
+      : t('char.decor.needEquip');
+    return;
+  }
+  el.classList.add('active');
+  el.innerHTML = `<span class="name">${escapeHtml(preview.name)}</span>${escapeHtml(preview.detail)} <span style="color:var(--text-secondary)">（${escapeHtml(preview.applyHint)}）</span>`;
+}
+
+function renderDecorBtn(slotId, kind) {
+  const decor = slotDecorations[slotId];
+  const has = kind === 'gem' ? !!decor.gemType : !!decor.enchantType;
+  const title = kind === 'gem' ? t('char.picker.pickGem') : t('char.picker.pickEnchant');
+  const url = getDecorSlotImageUrl(slotId, kind);
+  const fallback = kind === 'gem' ? '💎' : '✨';
+  const label = getDecorBtnLabel(slotId, kind);
+  const labelHtml = label ? `<span class="decor-label">${escapeHtml(label)}</span>` : '';
+  const inner = url
+    ? `<img class="decor-thumb" src="${escapeHtml(url)}" alt="" loading="lazy" onerror="this.replaceWith(document.createTextNode('${fallback}'))">${labelHtml}`
+    : fallback;
+  return `<button type="button" class="decor-btn${has ? ' has-img' : ' empty'}" data-slot="${slotId}" data-decor="${kind}" title="${escapeHtml(label || title)}">${inner}</button>`;
+}
+
+function buildGemPickerItems() {
+  const items = [];
+  for (const type of gd().GEM_TYPE_IDS) {
+    for (let lv = 1; lv <= 10; lv++) {
+      items.push({
+        id: `gem|${type}|${lv}`,
+        name: gd().GEM_TIER_NAMES(type)[lv - 1],
+        category: type,
+        level: lv,
+        gemType: type,
+        gemLevel: lv,
+        pickerKind: 'gem',
+      });
+    }
+  }
+  for (const qid of gd().QUEST_GEM_IDS) {
+    const q = gd().QUEST_GEMS[qid];
+    items.push({
+      id: `quest|${qid}`,
+      name: q.label,
+      category: 'quest',
+      level: q.level,
+      gemType: qid,
+      gemLevel: q.level,
+      pickerKind: 'gem',
+    });
+  }
+  return items;
+}
+
+function buildEnchantPickerItems(slotId) {
+  const items = [];
+  for (const type of getValidEnchants(slotId)) {
+    for (let lv = 1; lv <= 10; lv++) {
+      items.push({
+        id: `enchant|${type}|${lv}`,
+        name: gd().ENCHANT_TYPE_LABELS[type],
+        category: type,
+        level: lv,
+        enchantType: type,
+        enchantLevel: lv,
+        pickerKind: 'enchant',
+      });
+    }
+  }
+  return items;
+}
+
+function getGemCategoryLabel(slug) {
+  if (slug === 'quest') return t('char.questGem');
+  const key = 'char.gemType.' + slug;
+  const text = t(key);
+  return text === key ? (gd().GEM_TYPE_LABELS[slug] || slug) : text;
+}
+
+function getEnchantCategoryLabel(slug) {
+  const key = 'char.enchantType.' + slug;
+  const text = t(key);
+  return text === key ? (gd().ENCHANT_TYPE_LABELS[slug] || slug) : text;
+}
+
+function getDecorPickerCategories() {
+  if (pickerMode === 'gem') return [...gd().GEM_TYPE_IDS, 'quest'];
+  if (pickerMode === 'enchant') return getValidEnchants(pickerSlot);
+  return [];
+}
+
+function getDecorPickerItems() {
+  if (pickerMode === 'gem') return buildGemPickerItems();
+  if (pickerMode === 'enchant') return buildEnchantPickerItems(pickerSlot);
+  return [];
+}
+
+function formatDecorPickerPreview(item, slotId) {
+  if (!item) return '—';
+  const { general, mod } = getStatModes();
+  const base = equips[slotId]
+    ? resolveEquipStats(equips[slotId], general, mod, equipCustomStats[slotId], slotId)
+    : emptyEquipStats();
+  if (item.pickerKind === 'gem') {
+    const fakeDecor = { ...effectiveDecor(slotId), gemType: item.gemType, gemLevel: item.gemLevel };
+    return formatStatLine(applyGemBonus(base, fakeDecor, slotId));
+  }
+  const fakeDecor = { ...effectiveDecor(slotId), enchantType: item.enchantType, enchantLevel: item.enchantLevel };
+  return formatStatLine(applyEnchantBonus(fakeDecor, slotId));
+}
+
+function renderDecorPickerIcon(item) {
+  const url = gd().decorPickerImageUrl(item);
+  const fallback = item.pickerKind === 'gem' ? '💎' : '✨';
+  if (!url) return `<span class="picker-icon placeholder decor-icon">${fallback}</span>`;
+  return `<img class="picker-icon" src="${escapeHtml(url)}" alt="" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'picker-icon placeholder decor-icon',textContent:'${fallback}'}))">`;
+}
+
+function renderDecorPickerGridItems(items) {
+  const sorted = [...items].sort((a, b) => (a.level - b.level) || a.name.localeCompare(b.name, 'zh-Hant'));
+  return sorted.map(it => {
+    const stats = formatDecorPickerPreview(it, pickerSlot);
+    return `<button type="button" class="picker-item decor-pick" data-id="${escapeHtml(it.id)}" title="${escapeHtml(stats)}">
+      ${renderDecorPickerIcon(it)}
+      <span class="lv">${it.level}</span>
+      <span class="name">${escapeHtml(gn(it.name))}</span>
+    </button>`;
+  }).join('');
+}
+
+
+function applyDecorPick(item) {
+  const decor = slotDecorations[pickerSlot];
+  if (item.pickerKind === 'gem') {
+    decor.gemType = item.gemType;
+    decor.gemLevel = item.gemLevel;
+  } else {
+    decor.enchantType = item.enchantType;
+    decor.enchantLevel = item.enchantLevel;
+  }
+}
+
+function initStatModeSelects() {
+  const opts = STAT_MODE_OPTIONS.map(o => `<option value="${o.value}">${t(o.labelKey)}</option>`).join('');
+  document.getElementById('statModeGeneral').innerHTML = opts;
+  document.getElementById('statModeMod').innerHTML = opts;
+  document.getElementById('globalGemDecor').innerHTML = GLOBAL_GEM_OPTIONS.map(o =>
+    `<option value="${o.value}">${t(o.labelKey)}</option>`
+  ).join('');
+  document.getElementById('globalGemDecor').value = globalGemDecor;
+  const encOpts = STAT_MODE_OPTIONS.filter(o => o.value !== 'custom').map(o =>
+    `<option value="${o.value}">${t(o.labelKey)}</option>`
+  ).join('');
+  document.getElementById('globalEnchantMode').innerHTML = encOpts;
+  document.getElementById('globalEnchantMode').value = globalEnchantMode;
+}
+
+function getStatModes() {
+  return {
+    general: document.getElementById('statModeGeneral').value,
+    mod: document.getElementById('statModeMod').value,
+  };
+}
+
+function itemRelevantKeys(item, group) {
+  const keys = group === 'general' ? BASIC_KEYS : MOD_KEYS;
+  return keys.filter(k => {
+    if (item.ranges?.[k]) return item.ranges[k][0] !== 0 || item.ranges[k][1] !== 0;
+    return (item.stats?.[k] ?? 0) !== 0;
+  });
+}
+
+function resolveStatValue(item, key, mode, customMap) {
+  if (mode === 'custom') {
+    if (customMap && customMap[key] != null && customMap[key] !== '') {
+      return Math.round(Number(customMap[key])) || 0;
+    }
+    mode = 'max';
+  }
+  if (item.ranges?.[key]) {
+    const [min, max] = item.ranges[key];
+    return resolveScaledByMode(min, max, mode);
+  }
+  // 無區間 = 固定值，不套比例
+  return item.stats?.[key] ?? 0;
+}
+
+function resolveStats(item, generalMode, modMode, customMap) {
+  const out = emptyEquipStats();
+  if (!item) return out;
+  for (const k of BASIC_KEYS) out[k] = resolveStatValue(item, k, generalMode, customMap);
+  for (const k of MOD_KEYS) out[k] = resolveStatValue(item, k, modMode, customMap);
+  return out;
+}
+
+function isHyorikiEnabled() {
+  return document.getElementById('hyorikiToggle')?.checked;
+}
+
+function isPlayerMadeEquip(item) {
+  if (!item) return false;
+  if ((item.acquire || '') === '玩家製作') return true;
+  return item.categorySlug === 'water-dragon' || WATER_DRAGON_NAMES.has(item.name);
+}
+
+function resolveHyorikiSlot(item, slotId) {
+  if (slotId) return slotId;
+  return item?.calcSlot || null;
+}
+
+/** 百靈耐：武器只加攻、防具只加防；敏／回／精各部位有值都加 */
+function hyorikiBonusKeys(slotId) {
+  const keys = ['agi', 'rec', 'spt'];
+  if (slotId === 'weapon') keys.unshift('atk');
+  else if (slotId === 'hat' || slotId === 'body' || slotId === 'shoes' || slotId === 'shield') keys.unshift('def');
+  return keys;
+}
+
+function applyHyorikiBonus(stats, item, generalMode, slotId) {
+  if (!isHyorikiEnabled() || generalMode === 'custom' || !isPlayerMadeEquip(item)) return stats;
+  const slot = resolveHyorikiSlot(item, slotId);
+  if (!slot) return stats;
+  const out = { ...stats };
+  for (const k of hyorikiBonusKeys(slot)) {
+    const val = out[k] || 0;
+    if (val) out[k] = Math.floor(val * HYORIKI_RATE);
+  }
+  return out;
+}
+
+function resolveEquipStats(item, generalMode, modMode, customMap, slotId = null) {
+  return applyHyorikiBonus(resolveStats(item, generalMode, modMode, customMap), item, generalMode, slotId);
+}
+
+function initCustomStatsForSlot(slotId, generalMode, modMode) {
+  const item = equips[slotId];
+  if (!item) {
+    delete equipCustomStats[slotId];
+    return;
+  }
+  if (!equipCustomStats[slotId]) equipCustomStats[slotId] = {};
+  const keys = [];
+  if (generalMode === 'custom') keys.push(...itemRelevantKeys(item, 'general'));
+  if (modMode === 'custom') keys.push(...itemRelevantKeys(item, 'mod'));
+  for (const k of keys) {
+    if (equipCustomStats[slotId][k] == null || equipCustomStats[slotId][k] === '') {
+      equipCustomStats[slotId][k] = resolveStatValue(item, k, 'max', null);
+    }
+  }
+}
+
+function renderCustomStatPanel() {
+  const panel = document.getElementById('customStatPanel');
+  const { general, mod } = getStatModes();
+  const needCustom = general === 'custom' || mod === 'custom';
+  if (!needCustom) {
+    panel.classList.add('hidden');
+    panel.innerHTML = '';
+    return;
+  }
+  panel.classList.remove('hidden');
+  let html = `<p class="hint" style="margin-bottom:8px">${t('char.customPanelHint')}</p>`;
+  let hasAny = false;
+  for (const slot of SLOTS) {
+    const item = equips[slot.id];
+    if (!item) continue;
+    initCustomStatsForSlot(slot.id, general, mod);
+    const keys = [];
+    if (general === 'custom') keys.push(...itemRelevantKeys(item, 'general'));
+    if (mod === 'custom') keys.push(...itemRelevantKeys(item, 'mod'));
+    if (!keys.length) continue;
+    hasAny = true;
+    html += `<div class="custom-slot-block"><div class="custom-slot-label">${slotLabel(slot)} · ${escapeHtml(item.name)}</div><div class="custom-stat-grid">`;
+    for (const k of keys) {
+      const val = equipCustomStats[slot.id][k] ?? '';
+      html += `<label>${STAT_LABELS[k]}<input type="number" data-slot="${slot.id}" data-stat="${k}" value="${val}"></label>`;
+    }
+    html += '</div></div>';
+  }
+  panel.innerHTML = hasAny ? html : `<p class="hint">${t('char.customPanelEmpty')}</p>`;
+  panel.querySelectorAll('input[data-slot]').forEach(inp => {
+    inp.addEventListener('input', () => {
+      const sid = inp.dataset.slot;
+      const k = inp.dataset.stat;
+      if (!equipCustomStats[sid]) equipCustomStats[sid] = {};
+      equipCustomStats[sid][k] = inp.value;
+      recalc(false);
+    });
+  });
+}
+
+function renderCustomStatPanelIfNeeded() {
+  const sig = JSON.stringify({ modes: getStatModes(), equips: SLOTS.map(s => equips[s.id]?.id || null) });
+  if (sig === customPanelSignature) return;
+  customPanelSignature = sig;
+  renderCustomStatPanel();
+}
+
+function emptyEquipStats() {
+  return Object.fromEntries([...BASIC_KEYS, ...MOD_KEYS].map(k => [k, 0]));
+}
+
+function escapeHtml(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function itemStatValue(item, key) {
+  return item?.stats?.[key] ?? 0;
+}
+
+function hasExtraMods(item) {
+  if (!item) return false;
+  if (RESIST_KEYS.some(k => itemStatValue(item, k))) return true;
+  const cat = getPickerCategory(item);
+  const ignore = new Set(CATEGORY_MOD_IGNORE[cat] || []);
+  for (const k of CORRECT_KEYS) {
+    if (ignore.has(k)) continue;
+    const v = itemStatValue(item, k);
+    if (k === 'dodge' && NEG_DODGE_BASELINE_CATS.has(cat) && v <= 0) continue;
+    if (v) return true;
+  }
+  return false;
+}
+
+function formatStatLine(stats) {
+  return Object.entries(stats)
+    .filter(([, v]) => v)
+    .map(([k, v]) => `${STAT_LABELS[k] || k}${v > 0 ? '+' : ''}${v}`)
+    .join(' · ') || '—';
+}
+
+function formatItemStatPreview(item, slotId = null) {
+  if (!item) return '';
+  const { general, mod } = getStatModes();
+  const stats = slotId != null
+    ? resolveSlotStats(item, slotId)
+    : resolveEquipStats(item, general, mod, null, item?.calcSlot || null);
+  const basic = BASIC_KEYS.filter(k => stats[k]).map(k => `${STAT_LABELS[k]}${stats[k] > 0 ? '+' : ''}${stats[k]}`);
+  const modLine = MOD_KEYS.filter(k => stats[k]).map(k => `${STAT_LABELS[k]}${stats[k] > 0 ? '+' : ''}${stats[k]}`);
+  const detail = [basic.join(' · '), modLine.join(' · ')].filter(Boolean).join(' ｜ ') || '—';
+  const name = escapeHtml(item.name);
+  return `<span class="name">${name}</span>${escapeHtml(detail)}`;
+}
+
+function formatPickerStatPreview(item) {
+  return formatItemStatPreview(item, null);
+}
+
+function setEquipStatPreview(item, slotId) {
+  const el = document.getElementById('equipStatPreview');
+  if (!item) {
+    el.classList.remove('active');
+    el.textContent = t('char.equipPreviewHint');
+    return;
+  }
+  el.classList.add('active');
+  el.innerHTML = formatItemStatPreview(item, slotId);
+}
+
+function setPickerStatPreview(item) {
+  const el = document.getElementById('pickerStatPreview');
+  if (!item) {
+    el.classList.remove('active');
+    el.textContent = '—';
+    return;
+  }
+  el.classList.add('active');
+  el.innerHTML = formatPickerStatPreview(item);
+}
+
+function getNum(id) { return Number(document.getElementById(id).value) || 0; }
+
+const STAT_IDS = ['vit', 'str', 'def', 'agi', 'mag'];
+
+function statRemain(id) {
+  const { avail, singleMax } = clampPoints();
+  const others = STAT_IDS.filter(x => x !== id).reduce((s, x) => s + getNum(x), 0);
+  return { singleMax, remain: Math.max(0, avail - others) };
+}
+
+function clearAllStatPoints() {
+  STAT_IDS.forEach(id => { document.getElementById(id).value = '0'; });
+  recalc();
+}
+
+function applyStatShortcut(id, mode) {
+  const { singleMax, remain } = statRemain(id);
+  let val = 0;
+  if (mode === 'max') val = Math.min(singleMax, remain);
+  else if (mode === '100') val = Math.min(100, singleMax, remain);
+  else if (mode === 'remain') val = Math.min(singleMax, getNum(id) + remain);
+  document.getElementById(id).value = String(val);
+  recalc();
+}
+
+function clampPoints() {
+  const lvl = Math.max(1, getNum('level'));
+  const avail = 30 + 4 * (lvl - 1);
+  const singleMax = Math.floor(avail / 2);
+  ['vit','str','def','agi','mag'].forEach(id => {
+    const el = document.getElementById(id);
+    if (Number(el.value) > singleMax) el.value = String(singleMax);
+  });
+  return { avail, singleMax };
+}
+
+function getEquipTotals() {
+  const total = emptyEquipStats();
+  for (const slot of SLOTS) {
+    const item = equips[slot.id];
+    if (!item) continue;
+    const s = resolveSlotStats(item, slot.id);
+    for (const k of Object.keys(total)) total[k] += s[k] || 0;
+  }
+  return total;
+}
+
+function mergeStatMaps(a, b) {
+  const out = { ...a };
+  for (const [k, v] of Object.entries(b)) out[k] = (out[k] || 0) + (v || 0);
+  return out;
+}
+
+function resolveCrystalRollValue(opt, mode) {
+  if (opt.min === opt.max) return opt.min;
+  const m = crystalRollValueMode(mode);
+  if (m === 'min') return opt.min;
+  if (m === 'max') return opt.max;
+  if (m === 'avg') return Math.round((opt.min + opt.max) / 2);
+  return opt.min + Math.floor(Math.random() * (opt.max - opt.min + 1));
+}
+
+function rollCrystalTier(t, mode) {
+  const tier = CRYSTAL_UPGRADE_TIERS[t];
+  const idx = Math.floor(Math.random() * tier.length);
+  const opt = tier[idx];
+  return { idx, val: resolveCrystalRollValue(opt, mode) };
+}
+
+function getCrystalLevel() {
+  return Math.max(1, Math.min(10, crystalLevel || 1));
+}
+
+function setCrystalLevel(lv) {
+  crystalLevel = Math.max(1, Math.min(10, Math.round(Number(lv)) || 1));
+}
+
+function ensureCrystalRolls({ rerollAll = false } = {}) {
+  const lvl = getCrystalLevel();
+  const mode = getCrystalRollMode();
+  for (let t = 0; t < 9; t++) {
+    if (t >= lvl - 1) {
+      crystalRolls[t] = null;
+    } else if (mode === 'custom') {
+      const tier = CRYSTAL_UPGRADE_TIERS[t];
+      if (!crystalRolls[t]) {
+        crystalRolls[t] = { idx: 0, val: resolveCrystalRollValue(tier[0], mode) };
+      } else {
+        crystalRolls[t].idx = Math.min(crystalRolls[t].idx, tier.length - 1);
+        const opt = tier[crystalRolls[t].idx];
+        crystalRolls[t].val = resolveCrystalRollValue(opt, mode);
+      }
+    } else if (rerollAll || crystalRolls[t] == null) {
+      crystalRolls[t] = rollCrystalTier(t, mode);
+    }
+  }
+}
+
+function refreshCrystalRollValues() {
+  const mode = getCrystalRollMode();
+  for (let t = 0; t < crystalRolls.length; t++) {
+    const roll = crystalRolls[t];
+    if (!roll) continue;
+    const opt = CRYSTAL_UPGRADE_TIERS[t][roll.idx];
+    roll.val = resolveCrystalRollValue(opt, mode);
+  }
+}
+
+function buildCrystalTierSelectHtml(tierIdx, selectedIdx) {
+  const tier = CRYSTAL_UPGRADE_TIERS[tierIdx];
+  return CRYSTAL_STAT_GROUPS.map(g => {
+    const items = tier.map((o, idx) => ({ o, idx })).filter(({ o }) => g.keys.includes(o.key));
+    if (!items.length) return '';
+    const opts = items.map(({ o, idx }) =>
+      `<option value="${idx}"${idx === selectedIdx ? ' selected' : ''}>${escapeHtml(formatCrystalRefOption(o))}</option>`
+    ).join('');
+    return `<optgroup label="${t(g.labelKey)}">${opts}</optgroup>`;
+  }).join('');
+}
+
+function renderCrystalCustomPanel() {
+  const panel = document.getElementById('crystalCustomPanel');
+  const rows = document.getElementById('crystalCustomRows');
+  if (!panel || !rows) return;
+  const mode = getCrystalRollMode();
+  const lvl = getCrystalLevel();
+  panel.classList.toggle('hidden', mode !== 'custom');
+  if (mode !== 'custom') return;
+
+  if (lvl <= 1) {
+    rows.innerHTML = `<p class="hint" style="margin:0">${t('char.crystalNoTier')}</p>`;
+    return;
+  }
+  rows.innerHTML = Array.from({ length: lvl - 1 }, (_, t) => {
+    const idx = crystalRolls[t]?.idx ?? 0;
+    return `<div class="crystal-custom-row">
+      <label for="crystalPick${t}">${t + 1}→${t + 2}</label>
+      <select id="crystalPick${t}" class="crystal-pick-select" data-tier="${t}">${buildCrystalTierSelectHtml(t, idx)}</select>
+    </div>`;
+  }).join('');
+}
+
+function onCrystalCustomPick(t, idx) {
+  const tier = CRYSTAL_UPGRADE_TIERS[t];
+  if (!tier || idx < 0 || idx >= tier.length) return;
+  crystalRolls[t] = { idx, val: resolveCrystalRollValue(tier[idx], getCrystalRollMode()) };
+  recalc();
+}
+
+function formatCrystalOption(opt) {
+  const name = STAT_LABELS[opt.key] || opt.key;
+  if (opt.min === opt.max) return `${name} +${opt.min}`;
+  return `${name} +${opt.min}~${opt.max}`;
+}
+
+function getCrystalStats() {
+  const out = emptyEquipStats();
+  const lvl = getCrystalLevel();
+  for (const [k, v] of Object.entries(CRYSTAL_BASE)) out[k] = v;
+  for (let t = 0; t < lvl - 1; t++) {
+    const roll = crystalRolls[t];
+    if (!roll) continue;
+    const opt = CRYSTAL_UPGRADE_TIERS[t]?.[roll.idx];
+    if (!opt) continue;
+    out[opt.key] = (out[opt.key] || 0) + roll.val;
+  }
+  return out;
+}
+
+function getTitleCount() {
+  return Math.max(0, Math.min(200, titleCount || 0));
+}
+
+function setTitleCount(n) {
+  titleCount = Math.max(0, Math.min(200, Math.round(Number(n)) || 0));
+}
+
+function titleBonusColorClass(key) {
+  if (key === 'moveSpeedPct') return 'crystal-grp-move';
+  if (['atk', 'def', 'agi'].includes(key)) return 'crystal-grp-battle';
+  if (['hp', 'mp', 'spt', 'rec'].includes(key)) return 'crystal-grp-vital';
+  if (['crit', 'counter', 'hit', 'dodge', ...RESIST_KEYS].includes(key) || key === 'allResist') {
+    return 'crystal-grp-mod';
+  }
+  return 'crystal-grp-mod';
+}
+
+function formatTitleTierBonusHtml(tier) {
+  const chunks = [];
+  if (tier.allResist) {
+    const txt = `${t('char.titleAchAllResist')}+${tier.bonuses.poison || 1}`;
+    chunks.push(`<span class="crystal-grp ${titleBonusColorClass('allResist')}">${escapeHtml(txt)}</span>`);
+  } else {
+    for (const [k, v] of Object.entries(tier.bonuses || {})) {
+      if (!v) continue;
+      const txt = `${STAT_LABELS[k] || k}${v > 0 ? '+' : ''}${v}`;
+      chunks.push(`<span class="crystal-grp ${titleBonusColorClass(k)}">${escapeHtml(txt)}</span>`);
+    }
+  }
+  if (tier.moveSpeedPct) {
+    const txt = `${t('char.titleAchMoveSpeed')}+${tier.moveSpeedPct}%`;
+    chunks.push(`<span class="crystal-grp ${titleBonusColorClass('moveSpeedPct')}">${escapeHtml(txt)}</span>`);
+  }
+  if (!chunks.length) return '—';
+  return chunks.join('<span class="bonus-sep"> · </span>');
+}
+
+function getTitleAchievementStats() {
+  const out = emptyEquipStats();
+  out.moveSpeedPct = 0;
+  const n = getTitleCount();
+  for (const tier of TITLE_ACHIEVEMENT_TIERS) {
+    if (n < tier.need) continue;
+    for (const [k, v] of Object.entries(tier.bonuses || {})) {
+      out[k] = (out[k] || 0) + v;
+    }
+    if (tier.moveSpeedPct) out.moveSpeedPct += tier.moveSpeedPct;
+  }
+  return out;
+}
+
+function clampTrainLv(v) {
+  const n = Number(v);
+  if (!Number.isFinite(n)) return 0;
+  return Math.max(0, Math.min(5, Math.round(n)));
+}
+
+function syncTrainLevelsFromInputs() {
+  document.querySelectorAll('#trainStatGrid input[data-train-stat]').forEach(inp => {
+    const k = inp.dataset.trainStat;
+    const lv = clampTrainLv(inp.value);
+    trainLevels[k] = lv;
+    if (String(inp.value) !== String(lv)) inp.value = lv;
+  });
+}
+
+function getTrainStats() {
+  const out = emptyEquipStats();
+  for (const k of TRAIN_KEYS) {
+    const lv = clampTrainLv(trainLevels[k]);
+    if (lv) out[k] = lv;
+  }
+  return out;
+}
+
+function getCombinedBonusStats() {
+  return mergeStatMaps(
+    mergeStatMaps(mergeStatMaps(getEquipTotals(), getCrystalStats()), getTitleAchievementStats()),
+    getTrainStats()
+  );
+}
+
+function setAllTrainLevels(lv) {
+  const v = clampTrainLv(lv);
+  for (const k of TRAIN_KEYS) trainLevels[k] = v;
+  document.querySelectorAll('#trainStatGrid input[data-train-stat]').forEach(inp => {
+    inp.value = v;
+  });
+}
+
+function getUniformTrainLevel() {
+  const first = clampTrainLv(trainLevels[TRAIN_KEYS[0]]);
+  return TRAIN_KEYS.every(k => clampTrainLv(trainLevels[k]) === first) ? first : null;
+}
+
+function setTrainCustomOpen(open) {
+  trainCustomOpen = !!open;
+  const grid = document.getElementById('trainStatGrid');
+  grid?.classList.toggle('hidden', !trainCustomOpen);
+  if (trainCustomOpen) {
+    document.querySelectorAll('#trainStatGrid input[data-train-stat]').forEach(inp => {
+      inp.value = clampTrainLv(trainLevels[inp.dataset.trainStat]);
+    });
+  }
+}
+
+function renderTrainQuick() {
+  const el = document.getElementById('trainQuick');
+  if (!el) return;
+  const uniform = getUniformTrainLevel();
+  const nums = [0, 1, 2, 3, 4, 5].map(n =>
+    `<button type="button" class="stat-shortcut-btn${!trainCustomOpen && uniform === n ? ' active' : ''}" data-train-all="${n}">${n}</button>`
+  ).join('');
+  const customBtn = `<button type="button" class="stat-shortcut-btn${trainCustomOpen ? ' active' : ''}" data-train-custom="1">${t('common.custom')}</button>`;
+  el.innerHTML = nums + customBtn;
+  el.querySelectorAll('button[data-train-all]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      setAllTrainLevels(+btn.dataset.trainAll);
+      setTrainCustomOpen(false);
+      updateTrainPreview();
+      recalc(false);
+    });
+  });
+  el.querySelector('button[data-train-custom]')?.addEventListener('click', () => {
+    setTrainCustomOpen(true);
+    updateTrainPreview();
+    recalc(false);
+  });
+}
+
+function renderTrainStatInputs(keys) {
+  return keys.map(k => {
+    const lv = clampTrainLv(trainLevels[k]);
+    return `<label>${STAT_LABELS[k]}
+      <input type="number" min="0" max="5" step="1" value="${lv}" data-train-stat="${k}">
+    </label>`;
+  }).join('');
+}
+
+function renderTrainStatGrid() {
+  const el = document.getElementById('trainStatGrid');
+  if (!el) return;
+  el.innerHTML = `
+    <div>
+      <div class="train-stat-block-label">${escapeHtml(t('char.trainGroupMod'))}</div>
+      <div class="train-stat-grid cols-4">${renderTrainStatInputs(CORRECT_KEYS)}</div>
+    </div>
+    <div>
+      <div class="train-stat-block-label">${escapeHtml(t('char.trainGroupResist'))}</div>
+      <div class="train-stat-grid cols-3">${renderTrainStatInputs(RESIST_KEYS)}</div>
+    </div>`;
+}
+
+function updateTrainPreview() {
+  syncTrainLevelsFromInputs();
+  renderTrainQuick();
+  const el = document.getElementById('trainPreview');
+  if (!el) return;
+  const stats = getTrainStats();
+  const items = TRAIN_KEYS.filter(k => stats[k]).map(k =>
+    `${STAT_LABELS[k]}${stats[k] > 0 ? '+' : ''}${stats[k]}`
+  );
+  if (!items.length) {
+    el.classList.remove('active');
+    el.textContent = t('char.trainNone');
+    return;
+  }
+  el.classList.add('active');
+  el.innerHTML = `<span class="crystal-preview-label">${t('char.trainPreview')}</span>`
+    + `<span class="crystal-preview-stats"><span class="crystal-grp crystal-grp-mod">${escapeHtml(items.join(' · '))}</span></span>`;
+}
+
+function renderTitleAchQuick() {
+  const el = document.getElementById('titleAchQuick');
+  if (!el) return;
+  const cur = getTitleCount();
+  el.innerHTML = TITLE_ACH_QUICK.map(n =>
+    `<button type="button" class="stat-shortcut-btn${n === cur ? ' active' : ''}" data-title-n="${n}">${n}</button>`
+  ).join('');
+  el.querySelectorAll('button[data-title-n]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      setTitleCount(btn.dataset.titleN);
+      updateTitleAchPreview();
+      recalc(false);
+    });
+  });
+}
+
+function renderTitleAchRefTable() {
+  const el = document.getElementById('titleAchRefTable');
+  if (!el) return;
+  const n = getTitleCount();
+  const rows = TITLE_ACHIEVEMENT_TIERS.map(tier => {
+    const on = n >= tier.need;
+    return `<tr class="${on ? 'active-tier' : ''}">
+      <td class="${on ? 'tier-on' : 'tier-off'}">${on ? '✓' : '—'}</td>
+      <td>${tier.need}</td>
+      <td class="bonus-cell">${formatTitleTierBonusHtml(tier)}</td>
+    </tr>`;
+  }).join('');
+  el.innerHTML = `<table class="title-ach-ref-table"><thead><tr>
+    <th>${t('char.titleAchActive')}</th>
+    <th>${t('char.titleAchTier')}</th>
+    <th>${t('char.titleAchBonus')}</th>
+  </tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function updateTitleAchPreview() {
+  renderTitleAchQuick();
+  renderTitleAchRefTable();
+  const el = document.getElementById('titleAchPreview');
+  if (!el) return;
+  const stats = getTitleAchievementStats();
+  const n = getTitleCount();
+  const activeTiers = TITLE_ACHIEVEMENT_TIERS.filter(tier => n >= tier.need).length;
+  if (!activeTiers) {
+    el.classList.remove('active');
+    el.textContent = t('char.titleAchNone');
+    return;
+  }
+  el.classList.add('active');
+  el.innerHTML = `<span class="crystal-preview-label">${t('char.titleAchPreview', { n, tiers: activeTiers })}</span>`
+    + `<span class="crystal-preview-stats">${formatTitleAchStatLine(stats)}</span>`;
+}
+
+function formatTitleAchStatLine(stats) {
+  const groups = [
+    { cls: 'crystal-grp-battle', keys: ['atk', 'def', 'agi'] },
+    { cls: 'crystal-grp-vital', keys: ['hp', 'mp', 'spt', 'rec'] },
+    { cls: 'crystal-grp-mod', keys: ['crit', 'counter', 'hit', 'dodge', ...RESIST_KEYS] },
+  ];
+  const lines = groups.map(g => {
+    const items = g.keys.filter(k => stats[k]).map(k =>
+      `${STAT_LABELS[k] || k}${stats[k] > 0 ? '+' : ''}${stats[k]}`
+    );
+    if (!items.length) return '';
+    return `<span class="crystal-grp ${g.cls}">${escapeHtml(items.join(' · '))}</span>`;
+  }).filter(Boolean);
+  if (stats.moveSpeedPct) {
+    lines.push(`<span class="crystal-grp crystal-grp-move">${escapeHtml(`${t('char.titleAchMoveSpeed')}+${stats.moveSpeedPct}%`)}</span>`);
+  }
+  return lines.join('') || '—';
+}
+
+function formatCrystalStatLine(stats) {
+  const groups = CRYSTAL_STAT_GROUPS.map(g => {
+    const items = g.keys.filter(k => stats[k]).map(k => {
+      const name = CRYSTAL_REF_LABELS[k] || STAT_LABELS[k] || k;
+      return `${name}${stats[k] > 0 ? '+' : ''}${stats[k]}`;
+    });
+    if (!items.length) return '';
+    return `<span class="crystal-grp ${g.cls}">${escapeHtml(items.join(' · '))}</span>`;
+  }).filter(Boolean);
+  return groups.join('') || '—';
+}
+
+function renderCrystalLevelQuick() {
+  const el = document.getElementById('crystalLevelQuick');
+  if (!el) return;
+  const cur = getCrystalLevel();
+  el.innerHTML = CRYSTAL_LEVEL_QUICK.map(n =>
+    `<button type="button" class="stat-shortcut-btn${n === cur ? ' active' : ''}" data-crystal-lv="${n}">${n}</button>`
+  ).join('');
+  el.querySelectorAll('button[data-crystal-lv]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      setCrystalLevel(btn.dataset.crystalLv);
+      ensureCrystalRolls();
+      recalc();
+    });
+  });
+}
+
+function updateCrystalPanelState() {
+  const mode = getCrystalRollMode();
+  document.getElementById('crystalRerollBtn')?.classList.toggle('hidden', mode === 'custom');
+  const hint = document.getElementById('crystalRollHint');
+  if (hint) {
+    hint.textContent = mode === 'custom' ? t('char.crystalHintCustom') : t('char.crystalHintRoll');
+  }
+  renderCrystalCustomPanel();
+}
+
+function updateCrystalPreview() {
+  updateCrystalPanelState();
+  renderCrystalLevelQuick();
+  const el = document.getElementById('crystalStatPreview');
+  if (!el) return;
+  const c = getCrystalStats();
+  el.classList.add('active');
+  const line = formatCrystalStatLine(c);
+  el.innerHTML = `<span class="crystal-preview-label">${t('char.crystalPreview')}</span><span class="crystal-preview-stats">${line}</span>`;
+}
+
+function recalc(refreshCustomPanel = true) {
+  const { avail, singleMax } = clampPoints();
+  const vit = getNum('vit'), str = getNum('str'), def = getNum('def'), agi = getNum('agi'), mag = getNum('mag');
+  const used = vit + str + def + agi + mag;
+  document.getElementById('pointsAvail').textContent = avail;
+  document.getElementById('pointsUsed').textContent = used;
+  document.getElementById('pointsRemain').textContent = Math.max(0, avail - used);
+  document.getElementById('singleMax').textContent = singleMax;
+
+  const sum = { ...BASE };
+  const add = (p, c) => {
+    sum.hp += p * c.hp; sum.mp += p * c.mp; sum.atk += p * c.atk; sum.def += p * c.def;
+    sum.agi += p * c.agi; sum.spt += p * c.spt; sum.rec += p * c.rec;
+  };
+  add(vit, CONTRIB.vit); add(str, CONTRIB.str); add(def, CONTRIB.def);
+  add(agi, CONTRIB.agi); add(mag, CONTRIB.mag);
+
+  const eq = getCombinedBonusStats();
+  const display = {
+    hp: Math.floor(sum.hp + (eq.hp || 0)),
+    mp: Math.floor(sum.mp + (eq.mp || 0)),
+    atk: Math.floor(sum.atk + (eq.atk || 0)),
+    def: Math.floor(sum.def + (eq.def || 0)),
+    agi: Math.floor(sum.agi + (eq.agi || 0)),
+    spt: Math.floor(sum.spt + (eq.spt || 0)),
+    rec: Math.floor(sum.rec + (eq.rec || 0)),
+    charm: eq.charm || 0,
+    matk: eq.matk || 0,
+    amres: eq.amres || 0,
+  };
+
+  document.getElementById('basicResults').innerHTML = RESULT_BASIC_KEYS.flatMap(k => {
+    const item = `<div class="result-item"><span>${STAT_LABELS[k]}</span><strong>${display[k]}</strong></div>`;
+    // 魔抗單獨一列時靠右
+    return k === 'amres' ? ['<div class="result-item spacer" aria-hidden="true"></div>', item] : [item];
+  }).join('');
+
+  const modItem = k =>
+    `<div class="result-item"><span>${STAT_LABELS[k]}</span><strong>${eq[k] || 0}</strong></div>`;
+  document.getElementById('correctResults').innerHTML = RESULT_MOD_CORRECT_KEYS.map(modItem).join('');
+  document.getElementById('resistResults').innerHTML = RESULT_MOD_RESIST_KEYS.map(modItem).join('');
+
+  updateCrystalPreview();
+  updateTitleAchPreview();
+  updateTrainPreview();
+  renderEquipStage();
+  if (refreshCustomPanel) renderCustomStatPanelIfNeeded();
+}
+
+function clearAllEquips() {
+  SLOTS.forEach(s => { equips[s.id] = null; });
+  equipCustomStats = {};
+  slotDecorations = Object.fromEntries(SLOTS.map(s => [s.id, {
+    gemType: '', gemLevel: 5, enchantType: '', enchantLevel: 5,
+  }]));
+  customPanelSignature = '';
+  recalc();
+}
+
+function renderEquipStage() {
+  const posClass = { acc1:'tl', hat:'tc', acc2:'tr', weapon:'ml', shield:'mr', body:'bl', shoes:'br' };
+  const clusterClass = { top:'cluster-top', left:'cluster-left', right:'cluster-right', bottom:'cluster-bottom' };
+  document.getElementById('equipStage').innerHTML = SLOTS.map(s => {
+    const item = equips[s.id];
+    const pos = posClass[s.id];
+    const side = DECOR_SIDE[s.id];
+    const img = item && itemImageUrl(item) ? `<img class="equip-thumb" src="${escapeHtml(itemImageUrl(item))}" alt="" loading="lazy">` : '';
+    const equipBtn = `<button type="button" class="equip-btn" data-slot="${s.id}">
+      <span class="slot-label">${slotLabel(s)}</span>
+      ${img}
+      <span class="item-name ${item ? '' : 'empty'}">${item ? formatItemDisplayName(item) : escapeHtml(t('char.slot.pick'))}</span>
+    </button>`;
+    const decorCol = side
+      ? `<div class="decor-col decor-${side}">${renderDecorBtn(s.id, 'gem')}${renderDecorBtn(s.id, 'enchant')}</div>`
+      : '';
+    const cluster = side
+      ? `<div class="slot ${pos} slot-cluster ${clusterClass[side]}">${side === 'left' || side === 'top' ? decorCol + equipBtn : equipBtn + decorCol}</div>`
+      : `<div class="slot ${pos}">${equipBtn}</div>`;
+    return cluster;
+  }).join('');
+  document.querySelectorAll('.equip-btn').forEach(btn => {
+    const slotId = btn.dataset.slot;
+    const item = equips[slotId];
+    btn.addEventListener('click', () => openPicker(slotId));
+    btn.addEventListener('mouseenter', () => { if (item) setEquipStatPreview(item, slotId); });
+    btn.addEventListener('mouseleave', () => setEquipStatPreview(null));
+  });
+  document.querySelectorAll('.decor-btn').forEach(btn => {
+    const slotId = btn.dataset.slot;
+    const kind = btn.dataset.decor;
+    btn.addEventListener('click', () => openDecorPicker(slotId, kind));
+    btn.addEventListener('mouseenter', () => setDecorEffectPreview(slotId, kind));
+    btn.addEventListener('mouseleave', () => setEquipStatPreview(null));
+  });
+}
+
+function itemImageUrl(item) {
+  if (!item?.image) return '';
+  if (item.image.startsWith('http')) return item.image;
+  if (item.image.startsWith('equipment_images/')) return item.image;
+  return GUIDE_IMAGE_BASE + item.image;
+}
+
+function getOtherAccSlot(slotId) {
+  if (slotId === 'acc1') return 'acc2';
+  if (slotId === 'acc2') return 'acc1';
+  return null;
+}
+
+function getAccEquipType(item) {
+  return item ? getPickerCategory(item) : null;
+}
+
+function getBlockedAccTypes(slotId) {
+  const other = getOtherAccSlot(slotId);
+  if (!other) return new Set();
+  const type = getAccEquipType(equips[other]);
+  return type ? new Set([type]) : new Set();
+}
+
+function accTypeConflict(slotId, item) {
+  if (!item || !getOtherAccSlot(slotId)) return false;
+  const blocked = getBlockedAccTypes(slotId);
+  return blocked.has(getAccEquipType(item));
+}
+
+function getSlotCategories(slotId) {
+  const slot = SLOTS.find(s => s.id === slotId);
+  const present = new Set(getSlotItems(slotId).map(getPickerCategory));
+  const order = SLOT_CATEGORY_ORDER[slot.calcSlots[0]] || [];
+  const cats = order.filter(slug => present.has(slug));
+  for (const slug of present) if (!cats.includes(slug)) cats.push(slug);
+  return cats;
+}
+
+function getSlotItems(slotId) {
+  const slot = SLOTS.find(s => s.id === slotId);
+  let items = catalog.filter(it => slot.calcSlots.includes(it.calcSlot));
+  const blocked = getBlockedAccTypes(slotId);
+  if (blocked.size) items = items.filter(it => !blocked.has(getPickerCategory(it)));
+  return items;
+}
+
+function sortPickerItems(items) {
+  return [...items].sort((a, b) => {
+    const la = a.level ?? 999; const lb = b.level ?? 999;
+    if (la !== lb) return la - lb;
+    const nameCmp = a.name.localeCompare(b.name, 'zh-Hant');
+    if (nameCmp !== 0) return nameCmp;
+    const ia = a.itemId ?? 0; const ib = b.itemId ?? 0;
+    if (ia !== ib) return ia - ib;
+    const idx = pickerSortKey(a); const idy = pickerSortKey(b);
+    if (idx != null && idy != null) return idx - idy;
+    if (idx != null) return -1;
+    if (idy != null) return 1;
+    return 0;
+  });
+}
+
+function getLevelBadge(item, groupItems) {
+  if (item.name === '英靈之誓' && item.itemId) return '';
+  if (!item.level) return '';
+  const same = sortPickerItems(groupItems.filter(x => x.level === item.level && x.name === item.name));
+  if (same.length <= 1) return String(item.level);
+  const idx = same.findIndex(x => x.id === item.id);
+  return `${item.level}${String.fromCharCode(65 + Math.max(0, idx))}`;
+}
+
+function renderPickerIcon(item, small = false) {
+  const img = itemImageUrl(item);
+  const cls = small ? 'picker-icon' : 'picker-icon';
+  return img
+    ? `<img class="${cls}" src="${escapeHtml(img)}" alt="" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'picker-icon placeholder'}))">`
+    : '<span class="picker-icon placeholder"></span>';
+}
+
+function bindPickerItems(list) {
+  pickerListCache = list;
+  document.querySelectorAll('.picker-item').forEach(btn => {
+    const item = () => pickerListCache.find(x => x.id === btn.dataset.id)
+      || (pickerMode === 'equip' ? catalog.find(x => x.id === btn.dataset.id) : null)
+      || null;
+    btn.addEventListener('click', () => {
+      const picked = item();
+      if (!picked) return;
+      if (pickerMode === 'equip') {
+        if (accTypeConflict(pickerSlot, picked)) return;
+        equips[pickerSlot] = catalog.find(x => x.id === picked.id) || picked;
+        delete equipCustomStats[pickerSlot];
+        customPanelSignature = '';
+      } else {
+        applyDecorPick(picked);
+      }
+      closePicker();
+      recalc();
+    });
+    btn.addEventListener('mouseenter', () => {
+      if (pickerMode === 'equip') setPickerStatPreview(item());
+      else setPickerDecorPreview(item());
+    });
+    btn.addEventListener('mouseleave', () => setPickerStatPreview(null));
+  });
+}
+
+function setPickerDecorPreview(item) {
+  const el = document.getElementById('pickerStatPreview');
+  if (!item) {
+    el.classList.remove('active');
+    el.textContent = '—';
+    return;
+  }
+  el.classList.add('active');
+  el.innerHTML = `<span class="name">${escapeHtml(gn(item.name))}</span>${escapeHtml(formatDecorPickerPreview(item, pickerSlot))}`;
+}
+
+function renderPickerGroupedGrid(items, categorySlug) {
+  const sortedAll = sortPickerItems(items);
+  if (PICKER_FLAT_CATEGORIES.has(categorySlug)) {
+    return `<div class="picker-grid">${renderPickerGridItems(sortedAll, { badgeGroup: sortedAll })}</div>`;
+  }
+  const basic = sortedAll.filter(it => !hasExtraMods(it));
+  const extra = sortedAll.filter(it => hasExtraMods(it));
+  const showHeaders = basic.length > 0 && extra.length > 0;
+  let html = '';
+  if (basic.length) {
+    if (showHeaders) html += `<h5 class="picker-stat-group-title">${t(PICKER_STAT_GROUP_LABELS.basic)}</h5>`;
+    html += `<div class="picker-grid">${renderPickerGridItems(basic, { badgeGroup: sortedAll })}</div>`;
+  }
+  if (extra.length) {
+    if (showHeaders) html += `<h5 class="picker-stat-group-title">${t(PICKER_STAT_GROUP_LABELS.extra)}</h5>`;
+    html += `<div class="picker-grid">${renderPickerGridItems(extra, { badgeGroup: sortedAll })}</div>`;
+  }
+  return html;
+}
+
+function renderPickerGridItems(items, { badgeGroup = null } = {}) {
+  const sorted = sortPickerItems(items);
+  const badgeItems = badgeGroup ? sortPickerItems(badgeGroup) : sorted;
+  return sorted.map(it => {
+    const { general, mod } = getStatModes();
+    const stats = formatStatLine(resolveEquipStats(it, general, mod, null, it?.calcSlot || null));
+    const lv = getLevelBadge(it, badgeItems) ? `<span class="lv">${getLevelBadge(it, badgeItems)}</span>` : '';
+    return `<button type="button" class="picker-item" data-id="${escapeHtml(it.id)}" title="${escapeHtml(stats)}">
+      ${renderPickerIcon(it)}
+      ${lv}
+      <span class="name">${escapeHtml(gn(it.name))}</span>
+    </button>`;
+  }).join('');
+}
+
+function renderPickerSubTabs(categories, activeCat, labelFn) {
+  const subTabs = document.getElementById('pickerSubTabs');
+  if (!categories.length) {
+    subTabs.innerHTML = '';
+    subTabs.style.display = 'none';
+    return;
+  }
+  subTabs.style.display = '';
+  subTabs.innerHTML = categories.map(slug =>
+    `<button type="button" class="picker-sub-tab${slug === activeCat ? ' active' : ''}" data-cat="${escapeHtml(slug)}">${escapeHtml(labelFn(slug))}</button>`
+  ).join('');
+  subTabs.querySelectorAll('.picker-sub-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      pickerActiveCat = btn.dataset.cat;
+      renderPickerList();
+    });
+  });
+}
+
+function updatePickerModalLabels() {
+  if (!pickerSlot) return;
+  const slot = SLOTS.find(s => s.id === pickerSlot);
+  document.getElementById('pickerCloseBtn').textContent = t('char.picker.close');
+  if (pickerMode === 'equip') {
+    document.getElementById('pickerTitle').textContent = t('char.picker.equip', { slot: slotLabel(slot) });
+    document.getElementById('pickerHint').textContent = t('char.picker.hintEquip');
+    document.getElementById('pickerClearBtn').textContent = t('char.picker.clearSlot');
+  } else if (pickerMode === 'gem') {
+    document.getElementById('pickerTitle').textContent = t('char.picker.gem', { slot: slotLabel(slot) });
+    document.getElementById('pickerHint').textContent = t('char.picker.hintGem');
+    document.getElementById('pickerClearBtn').textContent = t('char.picker.clearGem');
+  } else {
+    document.getElementById('pickerTitle').textContent = t('char.picker.enchant', { slot: slotLabel(slot) });
+    document.getElementById('pickerHint').textContent = t('char.picker.hintEnchant');
+    document.getElementById('pickerClearBtn').textContent = t('char.picker.clearEnchant');
+  }
+}
+
+function refreshPickerModalI18n() {
+  const modal = document.getElementById('pickerModal');
+  if (modal.classList.contains('hidden') || !pickerSlot) return;
+  updatePickerModalLabels();
+  renderPickerList();
+}
+
+function openPicker(slotId) {
+  pickerMode = 'equip';
+  pickerSlot = slotId;
+  pickerActiveCat = getSlotCategories(slotId)[0] || null;
+  setPickerStatPreview(null);
+  updatePickerModalLabels();
+  renderPickerList();
+  document.getElementById('pickerModal').classList.remove('hidden');
+}
+
+function openDecorPicker(slotId, kind) {
+  if (!equips[slotId]) {
+    alert(t('char.decor.needEquip'));
+    return;
+  }
+  if (kind === 'gem' && !canGemSlot(slotId)) return;
+  if (kind === 'enchant' && !getValidEnchants(slotId).length) return;
+  const decor = slotDecorations[slotId];
+  if (decor.enchantType && !getValidEnchants(slotId).includes(decor.enchantType)) decor.enchantType = '';
+  pickerMode = kind;
+  pickerSlot = slotId;
+  if (kind === 'gem') {
+    pickerActiveCat = decor.gemType
+      ? (gd().isQuestGem(decor.gemType) ? 'quest' : decor.gemType)
+      : gd().GEM_TYPE_IDS[0];
+  } else {
+    pickerActiveCat = decor.enchantType || getValidEnchants(slotId)[0];
+  }
+  setPickerStatPreview(null);
+  updatePickerModalLabels();
+  renderPickerList();
+  document.getElementById('pickerModal').classList.remove('hidden');
+}
+
+function closePicker() {
+  document.getElementById('pickerModal').classList.add('hidden');
+  pickerSlot = null;
+  pickerMode = 'equip';
+  pickerActiveCat = null;
+  pickerListCache = [];
+  setPickerStatPreview(null);
+}
+
+function renderPickerList() {
+  const grid = document.getElementById('pickerGrid');
+  if (pickerMode !== 'equip') {
+    const items = getDecorPickerItems();
+    if (!items.length) {
+      document.getElementById('pickerSubTabs').innerHTML = '';
+      grid.innerHTML = `<p class="hint">${t('char.picker.noOptions')}</p>`;
+      pickerListCache = [];
+      return;
+    }
+    const categories = getDecorPickerCategories();
+    const labelFn = pickerMode === 'gem' ? getGemCategoryLabel : getEnchantCategoryLabel;
+    if (!pickerActiveCat || !categories.includes(pickerActiveCat)) pickerActiveCat = categories[0];
+    renderPickerSubTabs(categories, pickerActiveCat, labelFn);
+    const sections = categories.map(slug => {
+      const group = items.filter(it => it.category === slug);
+      if (!group.length) return '';
+      const visible = slug === pickerActiveCat;
+      return `<section class="picker-section" data-cat="${escapeHtml(slug)}" style="display:${visible ? 'block' : 'none'}">
+        <h4 class="picker-cat-title">${escapeHtml(labelFn(slug))}</h4>
+        <div class="picker-grid">${renderDecorPickerGridItems(group)}</div>
+      </section>`;
+    }).join('');
+    grid.innerHTML = sections || `<p class="hint">${t('char.picker.noOptions')}</p>`;
+    const visibleItems = items.filter(it => it.category === pickerActiveCat);
+    bindPickerItems(visibleItems);
+    return;
+  }
+
+  const slotItems = getSlotItems(pickerSlot);
+
+  if (!slotItems.length) {
+    document.getElementById('pickerSubTabs').innerHTML = '';
+    grid.innerHTML = `<p class="hint">${t('char.picker.noMatch')}</p>`;
+    pickerListCache = [];
+    return;
+  }
+
+  const categories = getSlotCategories(pickerSlot);
+  if (!pickerActiveCat || !categories.includes(pickerActiveCat)) pickerActiveCat = categories[0];
+  renderPickerSubTabs(categories, pickerActiveCat, slug => getCategoryLabel(slug));
+
+  const sections = categories.map(slug => {
+    const group = sortPickerItems(slotItems.filter(it => getPickerCategory(it) === slug));
+    if (!group.length) return '';
+    const visible = slug === pickerActiveCat;
+    return `<section class="picker-section" data-cat="${escapeHtml(slug)}" style="display:${visible ? 'block' : 'none'}">
+      <h4 class="picker-cat-title">${escapeHtml(getCategoryLabel(slug))}</h4>
+      ${renderPickerGroupedGrid(group, slug)}
+    </section>`;
+  }).join('');
+
+  grid.innerHTML = sections || `<p class="hint">${t('char.picker.noMatch')}</p>`;
+  const visibleItems = sortPickerItems(slotItems.filter(it => getPickerCategory(it) === pickerActiveCat));
+  bindPickerItems(visibleItems);
+}
+
+function currentBuild() {
+  const lvl = Math.max(1, getNum('level'));
+  clampPoints();
+  recalc();
+  const eq = getCombinedBonusStats();
+  const vit = getNum('vit'), str = getNum('str'), def = getNum('def'), agi = getNum('agi'), mag = getNum('mag');
+  const sum = { ...BASE };
+  const add = (p, c) => { sum.hp += p*c.hp; sum.mp += p*c.mp; sum.atk += p*c.atk; sum.def += p*c.def; sum.agi += p*c.agi; sum.spt += p*c.spt; sum.rec += p*c.rec; };
+  add(vit, CONTRIB.vit); add(str, CONTRIB.str); add(def, CONTRIB.def); add(agi, CONTRIB.agi); add(mag, CONTRIB.mag);
+  for (const k of BASIC_KEYS) sum[k] = Math.floor((sum[k] || 0) + (eq[k] || 0));
+  return {
+    name: document.getElementById('buildName').value.trim() || t('common.unnamed'),
+    lvl,
+    stats: Object.fromEntries(COMPARE_KEYS.map(k => [k, COMPARE_FROM_SUM.has(k) ? (sum[k] || 0) : (eq[k] || 0)])),
+  };
+}
+
+function renderCompare() {
+  const tbody = document.querySelector('#compareTable tbody');
+  tbody.innerHTML = compareList.map((b, i) => `<tr>
+    <td style="text-align:left">${escapeHtml(b.name)}</td><td>${b.lvl}</td>
+    ${COMPARE_KEYS.map(k => `<td>${b.stats[k] ?? 0}</td>`).join('')}
+    <td><button type="button" class="secondary" data-i="${i}">${escapeHtml(t('char.compare.delete'))}</button></td>
+  </tr>`).join('');
+  tbody.querySelectorAll('button[data-i]').forEach(btn => {
+    btn.addEventListener('click', () => { compareList.splice(Number(btn.dataset.i), 1); renderCompare(); });
+  });
+}
+
+async function fetchText(url, useProxy = false, timeoutMs = 8000) {
+  const prefixes = useProxy ? CORS_PROXIES : [''];
+  let lastErr = null;
+  for (const prefix of prefixes) {
+    try {
+      const target = prefix ? prefix + encodeURIComponent(url) : url;
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+      const resp = await fetch(target, { cache: 'no-store', signal: ctrl.signal });
+      clearTimeout(timer);
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      return resp.text();
+    } catch (e) {
+      lastErr = e.name === 'AbortError' ? new Error(t('char.loadTimeout')) : e;
+    }
+  }
+  throw lastErr || new Error('fetch failed');
+}
+
+function waitForCatalogScript(timeoutMs = 15000) {
+  if (window.EQUIPMENT_CATALOG?.items?.length) return Promise.resolve();
+  const scriptEl = document.getElementById('equipCatalogScript');
+  if (!scriptEl) return Promise.resolve();
+  if (scriptEl.dataset.loaded === '1') return Promise.resolve();
+  return new Promise(resolve => {
+    let done = false;
+    const finish = () => { if (!done) { done = true; resolve(); } };
+    const timer = setTimeout(finish, timeoutMs);
+    scriptEl.addEventListener('load', () => { scriptEl.dataset.loaded = '1'; clearTimeout(timer); finish(); }, { once: true });
+    scriptEl.addEventListener('error', () => { clearTimeout(timer); finish(); }, { once: true });
+  });
+}
+
+function setLoadBarPending(key) {
+  loadBarPendingKey = key;
+  catalogLoadError = null;
+  const bar = document.getElementById('loadBar');
+  bar.className = 'load-bar';
+  bar.textContent = t(key);
+}
+
+function applyCatalog(data) {
+  catalog = data.items || data;
+  if (!catalog.length) throw new Error(t('char.loadEmpty'));
+  catalogLoadError = null;
+  loadBarPendingKey = null;
+  const bar = document.getElementById('loadBar');
+  bar.className = 'load-bar ok';
+  bar.textContent = t('char.loadReady', { count: catalog.length });
+}
+
+async function loadCatalogFromFile(file) {
+  applyCatalog(JSON.parse(await file.text()));
+  renderEquipStage();
+  recalc();
+}
+
+function showCatalogLoadError(lastErr) {
+  catalogLoadError = lastErr;
+  loadBarPendingKey = null;
+  const isFileProtocol = location.protocol === 'file:';
+  const bar = document.getElementById('loadBar');
+  bar.className = 'load-bar err';
+  bar.innerHTML = [
+    t('char.loadError', { msg: lastErr?.message || t('char.loadUnknownError') }),
+    t(isFileProtocol ? 'char.loadErrorFile' : 'char.loadErrorWeb'),
+    `<button type="button" class="secondary" id="pickEquipBtn">${t('char.loadPickBtn')}</button>`,
+  ].join('<br>');
+  document.getElementById('pickEquipBtn').addEventListener('click', () => {
+    document.getElementById('equipFileInput').click();
+  });
+}
+
+async function loadCatalog() {
+  const tryApply = (data, source) => {
+    applyCatalog(data);
+    console.info('catalog loaded from', source);
+  };
+
+  if (window.EQUIPMENT_CATALOG?.items?.length) {
+    try { tryApply(window.EQUIPMENT_CATALOG, 'embedded'); return; } catch (e) { console.warn('embedded catalog fail', e); }
+  }
+
+  const localJson = new URL('equipment.json', location.href).href;
+  try {
+    setLoadBarPending('char.loadJson');
+    tryApply(JSON.parse(await fetchText(localJson, false, 6000)), localJson);
+    return;
+  } catch (e) {
+    console.warn('local json fail', e);
+  }
+
+  setLoadBarPending('char.loadCatalogJs');
+  await waitForCatalogScript(20000);
+  if (window.EQUIPMENT_CATALOG?.items?.length) {
+    try { tryApply(window.EQUIPMENT_CATALOG, 'equipment_catalog.js'); return; } catch (e) { console.warn('catalog js fail', e); }
+  }
+
+  const urls = [REPO_RAW + 'equipment.json'];
+  let lastErr = new Error(t('char.loadNotFound'));
+  for (const url of urls) {
+    try {
+      setLoadBarPending('char.loadRemote');
+      const useProxy = !url.includes('raw.githubusercontent.com');
+      tryApply(JSON.parse(await fetchText(url, useProxy, 10000)), url);
+      return;
+    } catch (e) {
+      lastErr = e;
+      console.warn('catalog fail', url, e);
+    }
+  }
+  showCatalogLoadError(lastErr);
+}
+
+document.querySelectorAll('#level,#vit,#str,#def,#agi,#mag,#statModeGeneral,#statModeMod,#globalGemDecor,#globalEnchantMode').forEach(el => {
+  el.addEventListener('input', () => {
+    if (el.id === 'statModeGeneral' || el.id === 'statModeMod') customPanelSignature = '';
+    if (el.id === 'globalGemDecor') globalGemDecor = el.value;
+    if (el.id === 'globalEnchantMode') globalEnchantMode = el.value;
+    recalc();
+  });
+  el.addEventListener('change', () => {
+    if (el.id === 'statModeGeneral' || el.id === 'statModeMod') customPanelSignature = '';
+    if (el.id === 'globalGemDecor') globalGemDecor = el.value;
+    if (el.id === 'globalEnchantMode') globalEnchantMode = el.value;
+    recalc();
+  });
+});
+document.getElementById('hyorikiToggle').addEventListener('change', () => recalc());
+document.getElementById('trainStatGrid').addEventListener('input', e => {
+  const inp = e.target.closest('input[data-train-stat]');
+  if (!inp) return;
+  trainLevels[inp.dataset.trainStat] = clampTrainLv(inp.value);
+  recalc(false);
+});
+document.getElementById('trainStatGrid').addEventListener('change', e => {
+  const inp = e.target.closest('input[data-train-stat]');
+  if (!inp) return;
+  trainLevels[inp.dataset.trainStat] = clampTrainLv(inp.value);
+  inp.value = trainLevels[inp.dataset.trainStat];
+  recalc(false);
+});
+document.getElementById('crystalRollMode').addEventListener('change', () => {
+  // 自選需要至少 2 等才有升級詞條可選
+  if (getCrystalRollMode() === 'custom' && getCrystalLevel() <= 1) {
+    setCrystalLevel(2);
+  }
+  ensureCrystalRolls();
+  refreshCrystalRollValues();
+  recalc();
+});
+document.getElementById('crystalCustomRows').addEventListener('change', e => {
+  const sel = e.target.closest('.crystal-pick-select');
+  if (!sel) return;
+  onCrystalCustomPick(+sel.dataset.tier, +sel.value);
+});
+document.getElementById('crystalRerollBtn').addEventListener('click', () => {
+  ensureCrystalRolls({ rerollAll: true });
+  recalc();
+});
+document.getElementById('clearAllEquipsBtn').addEventListener('click', clearAllEquips);
+document.getElementById('clearAllStatsBtn').addEventListener('click', clearAllStatPoints);
+document.querySelectorAll('.stat-shortcut-btn[data-stat]').forEach(btn => {
+  btn.addEventListener('click', () => applyStatShortcut(btn.dataset.stat, btn.dataset.mode));
+});
+document.getElementById('pickerCloseBtn').addEventListener('click', closePicker);
+document.getElementById('pickerClearBtn').addEventListener('click', () => {
+  if (!pickerSlot) return;
+  if (pickerMode === 'gem') {
+    slotDecorations[pickerSlot].gemType = '';
+  } else if (pickerMode === 'enchant') {
+    slotDecorations[pickerSlot].enchantType = '';
+  } else {
+    equips[pickerSlot] = null;
+    delete equipCustomStats[pickerSlot];
+    slotDecorations[pickerSlot] = {
+      gemType: '', gemLevel: 5, enchantType: '', enchantLevel: 5,
+    };
+    customPanelSignature = '';
+  }
+  closePicker();
+  recalc();
+});
+document.getElementById('pickerModal').addEventListener('click', e => { if (e.target.id === 'pickerModal') closePicker(); });
+document.getElementById('addBuildBtn').addEventListener('click', () => {
+  compareList.push(currentBuild());
+  renderCompare();
+});
+document.getElementById('equipFileInput').addEventListener('change', async (e) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  try {
+    await loadCatalogFromFile(file);
+  } catch (err) {
+    showCatalogLoadError(err);
+  }
+  e.target.value = '';
+});
+
+function refreshLoadBarI18n() {
+  const bar = document.getElementById('loadBar');
+  if (bar.classList.contains('ok') && catalog.length) {
+    bar.textContent = t('char.loadReady', { count: catalog.length });
+  } else if (bar.classList.contains('err') && catalogLoadError) {
+    showCatalogLoadError(catalogLoadError);
+  } else if (loadBarPendingKey) {
+    bar.textContent = t(loadBarPendingKey);
+  }
+}
+
+function applyCharLang() {
+  const modes = getStatModes();
+  StarCG_I18N.apply(document.body);
+  initStatModeSelects();
+  document.getElementById('statModeGeneral').value = modes.general;
+  document.getElementById('statModeMod').value = modes.mod;
+  document.getElementById('globalGemDecor').value = globalGemDecor;
+  document.getElementById('globalEnchantMode').value = globalEnchantMode;
+  refreshLoadBarI18n();
+  refreshPickerModalI18n();
+  renderEquipStage();
+  renderCrystalRefTable();
+  updateCrystalPanelState();
+  updateTitleAchPreview();
+  renderTrainStatGrid();
+  updateTrainPreview();
+  customPanelSignature = '';
+  renderCustomStatPanelIfNeeded();
+  renderCompare();
+  recalc(false);
+}
+
+function boot() {
+  StarCG_I18N.init({ titleKey: 'char.docTitle', onChange: applyCharLang });
+  initStatModeSelects();
+  renderCrystalRefTable();
+  updateCrystalPanelState();
+  updateTitleAchPreview();
+  renderTrainStatGrid();
+  updateTrainPreview();
+  renderEquipStage();
+  recalc();
+  loadCatalog()
+    .then(() => {
+      renderEquipStage();
+      recalc();
+      const modal = document.getElementById('pickerModal');
+      if (pickerSlot && modal && !modal.classList.contains('hidden')) renderPickerList();
+    })
+    .catch(err => showCatalogLoadError(err));
+}
+
+boot();
+</script>
+</body>
+</html>

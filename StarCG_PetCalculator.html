@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<!-- saved from url=(0060)https://wodenchen.github.io/StarCG/StarCG_PetCalculator.html -->
-<html lang="zh-TW"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>寵物成長模擬器</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com/">
-  <link href="./寵物成長模擬器_files/css2" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg-dark: #f3efe9;
@@ -636,28 +636,20 @@
       .stat-table input { max-width: 56px; min-width: 44px; padding: 8px 2px; }
     }
   </style>
-<style id="starcg-i18n-style">
-      .lang-switcher { display: inline-flex; align-items: center; gap: 0; margin-left: 6px;
-        border: 1px solid var(--border, #ddd5c8); border-radius: 6px; overflow: hidden; flex-shrink: 0; }
-      .lang-switcher button { border: none; background: transparent; padding: 4px 7px; font-size: 0.72rem;
-        cursor: pointer; color: var(--text-secondary, #7a7268); font-weight: 600; line-height: 1.3; }
-      .lang-switcher button:hover { background: var(--accent-soft, #ebe6de); color: var(--text-primary, #443c34); }
-      .lang-switcher button.active { background: var(--accent, #8b7355); color: #fff; }
-      body.lang-en, body.lang-ko { font-family: 'Noto Sans TC', 'Noto Sans KR', 'Noto Sans', -apple-system, sans-serif; }
-    </style></head>
-<body class="lang-zh-TW">
+</head>
+<body>
   <div class="wrap">
     <header>
       <h1 data-i18n="pet.title">🐾 寵物成長模擬器</h1>
-      <nav class="header-nav" data-i18n-aria="nav.aria" aria-label="相關連結">
-        <a href="https://wodenchen.github.io/StarCG/StarCG_PriceChecker.html" class="header-link" data-i18n="nav.price">⭐ 市場查價器</a>
-        <a href="https://wodenchen.github.io/StarCG/StarCG_CharacterCalculator.html" class="header-link" data-i18n="nav.char">⚔️ 角色能力計算</a>
+      <nav class="header-nav" data-i18n-aria="nav.aria">
+        <a href="StarCG_PriceChecker.html" class="header-link" data-i18n="nav.price">⭐ 市場查價器</a>
+        <a href="StarCG_CharacterCalculator.html" class="header-link" data-i18n="nav.char">⚔️ 角色能力計算</a>
         <a href="https://www.starcg.net/" target="_blank" rel="noopener noreferrer" class="header-link" data-i18n="nav.site">🌐 官網</a>
         <a href="https://guide.starcg.net/" target="_blank" rel="noopener noreferrer" class="header-link" data-i18n="nav.guide">📖 官方攻略網</a>
-      <div class="lang-switcher" role="group" aria-label="語言"><button type="button" data-lang="zh-TW" class="active">繁中</button><button type="button" data-lang="en">EN</button><button type="button" data-lang="ko">한</button></div></nav>
+      </nav>
     </header>
 
-    <div id="loadBar" class="load-bar status ok" data-i18n="pet.loadCatalog">✅ 圖鑑已就緒，共 516 隻寵物</div>
+    <div id="loadBar" class="load-bar" data-i18n="pet.loadCatalog">⏳ 正在載入寵物圖鑑…</div>
     <input type="file" id="petsFileInput" accept=".json,application/json">
 
     <div class="stack">
@@ -667,7 +659,7 @@
         <div class="params-grid">
           <div class="params-main">
             <div class="row">
-              <div class="field"><label data-i18n="pet.race">🧬 種族</label><select id="raceFilter"><option value="">全部</option><option value="不死系">不死系</option><option value="人形系">人形系</option><option value="昆蟲系">昆蟲系</option><option value="植物系">植物系</option><option value="特殊系">特殊系</option><option value="野獸系">野獸系</option><option value="金屬系">金屬系</option><option value="飛行系">飛行系</option><option value="龍系">龍系</option></select></div>
+              <div class="field"><label data-i18n="pet.race">🧬 種族</label><select id="raceFilter"><option value="" data-i18n-opt="common.all">全部</option></select></div>
               <div class="field"><label data-i18n="pet.cardFilter">🃏 卡等</label>
                 <select id="cardFilter">
                   <option value="" data-i18n-opt="common.all">全部</option>
@@ -679,7 +671,7 @@
             </div>
 
             <div class="row row-pet-select">
-              <div class="field" style="flex:2"><label data-i18n="pet.selectPet">🔍 選擇圖鑑寵物</label><select id="petSelect"><option value="">請選擇</option><option value="0">赤焰年獸（金 · 總129）</option><option value="1">年獸（金 · 總129）</option><option value="2">帕魯凱斯（金 · 總129）</option><option value="3">凱法（金 · 總129）</option><option value="4">猶大（金 · 總129）</option><option value="5">歌姬雪蕾潔(攻)（金 · 總129）</option><option value="6">歌姬雪蕾潔(魔)（金 · 總129）</option><option value="7">滅龍勇士西恩（金 · 總129）</option><option value="8">勇者里雍(攻)（金 · 總129）</option><option value="9">勇者里雍(魔)（金 · 總129）</option><option value="10">帕布提斯馬（金 · 總129）</option><option value="11">冥界冰龍（金 · 總129）</option><option value="12">兔兔（金 · 總129）</option><option value="13">無頭騎士（金 · 總129）</option><option value="14">南瓜魔王(攻)（金 · 總129）</option><option value="15">南瓜魔王(魔)（金 · 總129）</option><option value="16">骸骨魔獅（金 · 總119）</option><option value="17">劍之精靈亞瑟（金 · 總129）</option><option value="18">惡魔統領（金 · 總129）</option><option value="19">皇冠蘿蔔兔（金 · 總129）</option><option value="20">火精（金 · 總124）</option><option value="21">噩夢牛頭怪（金 · 總129）</option><option value="22">熱砂的歐茲尼克（金 · 總129）</option><option value="23">愛里西雅（金 · 總129）</option><option value="24">雄火龍（金 · 總129）</option><option value="25">暗影螳螂（金 · 總119）</option><option value="26">殺熊者歐茲那克（金 · 總129）</option><option value="27">黑龍（金 · 總129）</option><option value="28">聖誕黃金樹精(攻)（金 · 總129）</option><option value="29">聖誕黃金樹精(魔)（金 · 總129）</option><option value="30">赤鐵獸王（金 · 總129）</option><option value="31">幻銀獸王（金 · 總129）</option><option value="32">姹紫甲冑（金 · 總124）</option><option value="33">虎頭蜂（金 · 總129）</option><option value="34">迅龍（金 · 總129）</option><option value="35">辰龍(攻)（金 · 總129）</option><option value="36">辰龍(魔)（金 · 總129）</option><option value="37">海賊頭目（金 · 總129）</option><option value="38">寒冰牛頭怪（金 · 總129）</option><option value="39">達哈卡（金 · 總124）</option><option value="40">蘿蔔兔（金 · 總129）</option><option value="41">聖誕樹精(攻)（金 · 總129）</option><option value="42">聖誕樹精(魔)（金 · 總129）</option><option value="43">火焰舞者（金 · 總124）</option><option value="44">貓熊（金 · 總119）</option><option value="45">死灰螳螂（金 · 總119）</option><option value="46">木乃伊（金 · 總124）</option><option value="47">堤風（金 · 總129）</option><option value="48">暗影龍蜥（金 · 總124）</option><option value="49">殘暴呼呼國王（金 · 總129）</option><option value="50">惡魔蝙蝠（金 · 總124）</option><option value="51">神龍（金 · 總129）</option><option value="52">妖狐（金 · 總119）</option><option value="53">大地牛頭怪（金 · 總129）</option><option value="54">冰藍史萊姆（金 · 總129）</option><option value="55">水精（金 · 總124）</option><option value="56">吉伊卡哇（金 · 總129）</option><option value="57">彩虹史萊姆（金 · 總129）</option><option value="58">迷你彩虹史萊姆（金 · 總129）</option><option value="59">兔耳蝙蝠（金 · 總129）</option><option value="60">時雨（金 · 總129）</option><option value="61">翼龍（金 · 總119）</option><option value="62">鞭撻草（金 · 總119）</option><option value="63">黃金樹精（金 · 總119）</option><option value="64">大公雞（金 · 總124）</option><option value="65">兔耳嚇人箱（金 · 總129）</option><option value="66">黃金幼龍（金 · 總129）</option><option value="67">冰冷樹精（金 · 總129）</option><option value="68">貓人（金 · 總124）</option><option value="69">彩翼飛龍（金 · 總129）</option><option value="70">瓦傑特（金 · 總129）</option><option value="71">暗影翼龍（金 · 總124）</option><option value="72">小石像怪（金 · 總119）</option><option value="73">天使蝙蝠（金 · 總124）</option><option value="74">黑暗鳥人（金 · 總129）</option><option value="75">黑蘿蔔兔（金 · 總129）</option><option value="76">地精（金 · 總124）</option><option value="77">血雨（金 · 總124）</option><option value="78">幻影殺手蝎（金 · 總124）</option><option value="79">暗醫阿魯巴斯（金 · 總129）</option><option value="80">火焰牛頭怪（金 · 總129）</option><option value="81">鼠王（金 · 總129）</option><option value="82">丸子炸彈（金 · 總119）</option><option value="83">風精（金 · 總124）</option><option value="84">奇美拉（金 · 總124）</option><option value="85">純白嚇人箱（金 · 總129）</option><option value="86">不死露比(攻)（金 · 總129）</option><option value="87">不死露比(魔)（金 · 總129）</option><option value="88">阿卡斯（金 · 總129）</option><option value="89">魔術師烏莉兒（金 · 總124）</option><option value="90">水藍鼠（金 · 總119）</option><option value="91">多拉姆糖（金 · 總129）</option><option value="92">幻影（金 · 總124）</option><option value="93">旋律影子（金 · 總124）</option><option value="94">暗影（金 · 總124）</option><option value="95">陰影（金 · 總124）</option><option value="96">豬豬護士長（金 · 總129）</option><option value="97">小八貓（金 · 總129）</option><option value="98">丘比特（金 · 總119）</option><option value="99">骷髏海盜（金 · 總119）</option><option value="100">依代（金 · 總129）</option><option value="101">深淵里雍(攻)（金 · 總129）</option><option value="102">深淵里雍(魔)（金 · 總129）</option><option value="103">冰羽公主（金 · 總129）</option><option value="104">梅菲斯特（金 · 總129）</option><option value="105">斯卡蒂（金 · 總129）</option><option value="106">櫻花螳螂（金 · 總129）</option><option value="107">煉焰飛龍（金 · 總129）</option><option value="108">烈風牛頭怪（金 · 總129）</option><option value="109">暗黑烈風牛頭怪（金 · 總129）</option><option value="110">佛利波羅（金 · 總129）</option><option value="111">暗黑歌姬(攻)（金 · 總129）</option><option value="112">暗黑歌姬(魔)（金 · 總129）</option><option value="113">奪魂南瓜魔王(攻)（金 · 總129）</option><option value="114">奪魂南瓜魔王(魔)（金 · 總129）</option><option value="115">翱翔年獸（金 · 總129）</option><option value="116">國皇鼠（金 · 總129）</option><option value="117">白龍（金 · 總129）</option><option value="118">聖紋白龍（金 · 總129）</option><option value="119">棺姬艾利菲亞（金 · 總129）</option><option value="120">大黑龍骨（金 · 總129）</option><option value="121">鋼羽隼（金 · 總129）</option><option value="122">琥珀年獸（金 · 總129）</option><option value="123">億萬兩招財貓（攻）（金 · 總129）</option><option value="124">億萬兩招財貓（魔）（金 · 總129）</option><option value="125">卡蓮（金 · 總129）</option><option value="126">炎之精靈紅蓮（金 · 總129）</option><option value="127">飛天招財貓（金 · 總129）</option><option value="128">黃金鯉魚武士（金 · 總129）</option><option value="129">聖誕冰冷樹精(攻)（金 · 總129）</option><option value="130">聖誕冰冷樹精(魔)（金 · 總129）</option><option value="131">幽冥南瓜魔王(攻)（金 · 總129）</option><option value="132">幽冥南瓜魔王(魔)（金 · 總129）</option><option value="133">閃電陰影（金 · 總129）</option><option value="134">冰晶豬王（金 · 總129）</option><option value="135">蒼炎聖劍（金 · 總129）</option><option value="136">惡魔將軍（金 · 總129）</option><option value="137">彩蛋雛鳥（金 · 總129）</option><option value="138">雪羽公主（金 · 總129）</option><option value="139">軟軟湯圓兔（金 · 總129）</option><option value="140">綿綿湯圓兔（金 · 總129）</option><option value="141">白銀聖衛(攻)（金 · 總129）</option><option value="142">白銀聖衛(魔)（金 · 總129）</option><option value="143">神樂火舞（金 · 總129）</option><option value="144">神樂雪舞（金 · 總129）</option><option value="145">失翼之龍杜瓦（金 · 總129）</option><option value="146">翠紋失翼之龍杜瓦（金 · 總129）</option><option value="147">赤金皇蠍（金 · 總129）</option><option value="148">利維坦（金 · 總129）</option><option value="149">龍蝦霸王（金 · 總124）</option><option value="150">惡魔女帝（金 · 總129）</option><option value="151">粉櫻千代（金 · 總129）</option><option value="152">李貝留斯（金 · 總129）</option><option value="153">神官維克特（金 · 總129）</option><option value="154">未淨化的怨念 (攻)（金 · 總129）</option><option value="155">未淨化的怨念 (魔)（金 · 總129）</option><option value="156">蜜桃多拉姆糖 （金 · 總129）</option><option value="157">燼火狂牛（金 · 總129）</option><option value="158">玄武（金 · 總129）</option><option value="159">碧幽騎士（金 · 總129）</option><option value="160">緋璇(攻)（金 · 總129）</option><option value="161">緋璇(魔)（金 · 總129）</option><option value="162">烈炎聖劍（金 · 總129）</option><option value="163">刻耳柏洛斯（金 · 總129）</option><option value="164">蒼雷幻龍(攻)（金 · 總129）</option><option value="165">蒼雷幻龍(魔)（金 · 總129）</option><option value="166">血盟騎士（金 · 總129）</option></select></div>
+              <div class="field" style="flex:2"><label data-i18n="pet.selectPet">🔍 選擇圖鑑寵物</label><select id="petSelect"><option value="" data-i18n-opt="pet.pleaseSelect">請選擇</option></select></div>
               <div class="field field-btn" style="align-self:end">
                 <label>&nbsp;</label>
                 <button type="button" id="maxStarBtn" class="toggle secondary" data-i18n="pet.maxStarOff">⭐ 一鍵滿星：OFF</button>
@@ -696,11 +688,11 @@
             <div class="field"><label data-i18n="pet.level">📈 等級 (Lv)</label><input type="number" id="level" value="120" min="1" max="200"></div>
             <div class="field">
               <label data-i18n="pet.cardRank">🃏 卡片等級</label>
-              <select id="cardRank"><option value="0">—</option><option value="6">普卡 (+6 BP/改)</option><option value="7">銀卡 (+7 BP/改)</option><option value="8">金卡 (+8 BP/改)</option></select>
+              <select id="cardRank"></select>
             </div>
             <div class="field">
               <label data-i18n="pet.modGrade">🔧 改造次數</label>
-              <select id="modGrade"><option value="0">0 改</option><option value="1">1 改</option><option value="2">2 改</option><option value="3">3 改</option><option value="4">4 改</option><option value="5">5 改</option><option value="6">6 改</option></select>
+              <select id="modGrade"></select>
             </div>
           </div>
         </div>
@@ -750,16 +742,16 @@
             </tbody>
           </table>
           </div>
-          <div class="pet-portrait-box" id="petPortraitBox" hidden="">
+          <div class="pet-portrait-box" id="petPortraitBox" hidden>
             <img id="petPortrait" alt="" decoding="async">
           </div>
         </div>
 
         <div class="hint"><span data-i18n="pet.randSum">🎲 隨機檔總和：</span><strong id="randDisplay">10</strong><span id="randDisplaySuffix"> / 10</span></div>
-        <div id="randWarn" class="warn" data-i18n="pet.randWarn" style="display: none;"></div>
-        <div class="hint"><span data-i18n="pet.points">💎 可用點數：</span><strong id="pointDisplay">0 / 119（剩餘 119）</strong></div>
-        <div id="pointWarn" class="warn" data-i18n="pet.pointWarn" style="display: none;">⚠️ 配點超過上限！</div>
-        <div id="manualWarn" class="warn" style="display: none;"></div>
+        <div id="randWarn" class="warn" data-i18n="pet.randWarn">⚠️ 隨機檔總和過高！</div>
+        <div class="hint"><span data-i18n="pet.points">💎 可用點數：</span><strong id="pointDisplay">0 / 0</strong></div>
+        <div id="pointWarn" class="warn" data-i18n="pet.pointWarn">⚠️ 配點超過上限！</div>
+        <div id="manualWarn" class="warn"></div>
 
         <div class="btn-row">
           <button type="button" class="secondary" onclick="maxStat(0)" data-i18n="pet.btnAllVit">❤️ 全體</button>
@@ -774,13 +766,13 @@
       <section class="card">
         <h2><span class="section-icon">📊</span> <span data-i18n="pet.preview">當前數值試算</span></h2>
         <div class="preview" id="preview">
-          <div class="box"><div class="ico">❤️</div><div class="k">HP</div><div class="v" data-k="hp">2580.18</div></div>
-          <div class="box"><div class="ico">💧</div><div class="k">MP</div><div class="v" data-k="mp">2141.72</div></div>
-          <div class="box"><div class="ico">⚔️</div><div class="k" data-k="atk">攻擊</div><div class="v" data-k="atk">645.64</div></div>
-          <div class="box"><div class="ico">🛡️</div><div class="k" data-k="def">防禦</div><div class="v" data-k="def">630.28</div></div>
-          <div class="box"><div class="ico">💨</div><div class="k" data-k="agi">敏捷</div><div class="v" data-k="agi">371.81</div></div>
-          <div class="box"><div class="ico">💚</div><div class="k" data-k="rec">回復</div><div class="v" data-k="rec">185.31</div></div>
-          <div class="box"><div class="ico">🔮</div><div class="k" data-k="spt">精神</div><div class="v" data-k="spt">136.31</div></div>
+          <div class="box"><div class="ico">❤️</div><div class="k">HP</div><div class="v" data-k="hp">-</div></div>
+          <div class="box"><div class="ico">💧</div><div class="k">MP</div><div class="v" data-k="mp">-</div></div>
+          <div class="box"><div class="ico">⚔️</div><div class="k" data-k="atk">攻擊</div><div class="v" data-k="atk">-</div></div>
+          <div class="box"><div class="ico">🛡️</div><div class="k" data-k="def">防禦</div><div class="v" data-k="def">-</div></div>
+          <div class="box"><div class="ico">💨</div><div class="k" data-k="agi">敏捷</div><div class="v" data-k="agi">-</div></div>
+          <div class="box"><div class="ico">💚</div><div class="k" data-k="rec">回復</div><div class="v" data-k="rec">-</div></div>
+          <div class="box"><div class="ico">🔮</div><div class="k" data-k="spt">精神</div><div class="v" data-k="spt">-</div></div>
         </div>
       </section>
 
@@ -815,23 +807,23 @@
 
       <section class="card reverse-section" id="reverseEvalSection">
         <h2><span class="section-icon">📊</span> <span data-i18n="pet.reverseTitle">隨機檔優劣評估</span></h2>
-        <p class="hint" data-i18n="pet.reverseHint1">輸入遊戲面板的七圍數值，反推總隨機檔並判定優劣。建議小數第 2 位（PC 版面板可查看）。</p>
-        <p class="hint" data-i18n="pet.reverseHint2">ℹ️ 反推的總隨機檔含天生與成長亂數的綜合效果（無法拆分）。同等等級下總和越高通常代表隨機運越好。</p>
+        <p class="hint" data-i18n="pet.reverseHint1">輸入遊戲面板的<strong>七圍數值</strong>，反推<strong>總隨機檔</strong>並判定優劣。<strong>建議小數第 2 位</strong>（PC 版面板可查看）。</p>
+        <p class="hint" data-i18n="pet.reverseHint2">ℹ️ 反推的<strong>總隨機檔</strong>含天生與成長亂數的綜合效果（無法拆分）。同等等級下總和越高通常代表隨機運越好。</p>
 
         <div class="reverse-params">
-          <p class="hint" style="margin:0" data-i18n="pet.reverseParamsHint">⚙️ 以下參數獨立於成長模擬，僅用於反推；選圖鑑會同步檔次與卡片，其餘設定各自記憶。</p>
+          <p class="hint" style="margin:0" data-i18n="pet.reverseParamsHint">⚙️ 以下參數<strong>獨立於成長模擬</strong>，僅用於反推；選圖鑑會同步檔次與卡片，其餘設定各自記憶。</p>
           <div class="reverse-params-row">
             <div class="field"><label data-i18n="pet.level">📈 等級 (Lv)</label><input type="number" class="rev-param" id="revLevel" value="1" min="1" max="200"></div>
             <div class="field">
               <label data-i18n="pet.cardRank">🃏 卡片等級</label>
-              <select class="rev-param" id="revCardRank"><option value="0">—</option><option value="6">普卡 (+6 BP/改)</option><option value="7">銀卡 (+7 BP/改)</option><option value="8">金卡 (+8 BP/改)</option></select>
+              <select class="rev-param" id="revCardRank"></select>
             </div>
             <div class="field">
               <label data-i18n="pet.modGrade">🔧 改造次數</label>
-              <select class="rev-param" id="revModGrade"><option value="0">0 改</option><option value="1">1 改</option><option value="2">2 改</option><option value="3">3 改</option><option value="4">4 改</option><option value="5">5 改</option><option value="6">6 改</option></select>
+              <select class="rev-param" id="revModGrade"></select>
             </div>
           </div>
-          <div class="hint" style="margin-top:8px"><span data-i18n="pet.revPoints">💎 配點：</span><strong id="revPointDisplay">145 / 156（剩餘 11）</strong><span id="revPointWarn" class="warn" style="display:none;margin-left:8px" data-i18n="pet.revPointWarn">⚠️ 配點超過上限</span></div>
+          <div class="hint" style="margin-top:8px"><span data-i18n="pet.revPoints">💎 配點：</span><strong id="revPointDisplay">0 / 0</strong><span id="revPointWarn" class="warn" style="display:none;margin-left:8px" data-i18n="pet.revPointWarn">⚠️ 配點超過上限</span></div>
           <table class="stat-table rev-stat-table">
             <thead>
               <tr><th></th><th data-i18n="pet.statVit">體</th><th data-i18n="pet.statStr">力</th><th data-i18n="pet.statDef">強</th><th data-i18n="pet.statAgi">速</th><th data-i18n="pet.statMag">魔</th></tr>
@@ -873,26 +865,25 @@
         </div>
 
         <div class="reverse-grid reverse-grid-stats">
-          <div class="field"><label>❤️ HP <span class="req">*</span></label><input type="number" step="0.01" id="obsHp" data-i18n-placeholder="pet.obsPh" placeholder="例：123.45" required=""></div>
-          <div class="field"><label>💧 MP <span class="req">*</span></label><input type="number" step="0.01" id="obsMp" data-i18n-placeholder="pet.obsPh" placeholder="例：123.45" required=""></div>
-          <div class="field"><label>⚔️ <span data-i18n="stat.atk">攻擊</span> <span class="req">*</span></label><input type="number" step="0.01" id="obsAtk" data-i18n-placeholder="pet.obsPh" placeholder="例：123.45" required=""></div>
-          <div class="field"><label>🛡️ <span data-i18n="stat.def">防禦</span> <span class="req">*</span></label><input type="number" step="0.01" id="obsDef" data-i18n-placeholder="pet.obsPh" placeholder="例：123.45" required=""></div>
-          <div class="field"><label>💨 <span data-i18n="stat.agi">敏捷</span> <span class="req">*</span></label><input type="number" step="0.01" id="obsAgi" data-i18n-placeholder="pet.obsPh" placeholder="例：123.45" required=""></div>
-          <div class="field"><label>💚 <span data-i18n="stat.rec">回復</span> <span class="req">*</span></label><input type="number" step="0.01" id="obsRec" data-i18n-placeholder="pet.obsPhRec" placeholder="例：100.00" required=""></div>
-          <div class="field"><label>🔮 <span data-i18n="stat.spt">精神</span> <span class="req">*</span></label><input type="number" step="0.01" id="obsSpt" data-i18n-placeholder="pet.obsPhRec" placeholder="例：100.00" required=""></div>
+          <div class="field"><label>❤️ HP <span class="req">*</span></label><input type="number" step="0.01" id="obsHp" data-i18n-placeholder="pet.obsPh" placeholder="例：123.45" required></div>
+          <div class="field"><label>💧 MP <span class="req">*</span></label><input type="number" step="0.01" id="obsMp" data-i18n-placeholder="pet.obsPh" placeholder="例：123.45" required></div>
+          <div class="field"><label>⚔️ <span data-i18n="stat.atk">攻擊</span> <span class="req">*</span></label><input type="number" step="0.01" id="obsAtk" data-i18n-placeholder="pet.obsPh" placeholder="例：123.45" required></div>
+          <div class="field"><label>🛡️ <span data-i18n="stat.def">防禦</span> <span class="req">*</span></label><input type="number" step="0.01" id="obsDef" data-i18n-placeholder="pet.obsPh" placeholder="例：123.45" required></div>
+          <div class="field"><label>💨 <span data-i18n="stat.agi">敏捷</span> <span class="req">*</span></label><input type="number" step="0.01" id="obsAgi" data-i18n-placeholder="pet.obsPh" placeholder="例：123.45" required></div>
+          <div class="field"><label>💚 <span data-i18n="stat.rec">回復</span> <span class="req">*</span></label><input type="number" step="0.01" id="obsRec" data-i18n-placeholder="pet.obsPhRec" placeholder="例：100.00" required></div>
+          <div class="field"><label>🔮 <span data-i18n="stat.spt">精神</span> <span class="req">*</span></label><input type="number" step="0.01" id="obsSpt" data-i18n-placeholder="pet.obsPhRec" placeholder="例：100.00" required></div>
         </div>
         <div class="reverse-options">
           <label><input type="checkbox" id="lockManualCheckbox"> <span data-i18n="pet.lockManual">配點已確認（不搜尋其他配點）</span></label>
         </div>
         <div class="btn-row" style="margin-top:12px">
           <button type="button" id="reverseCalcBtn" data-i18n="pet.reverseCalcBtn">📊 評估隨機檔優劣</button>
-          <button type="button" class="secondary" id="addReverseEvalBtn" disabled="" data-i18n="pet.addReverseEval">➕ 加入評估清單</button>
+          <button type="button" class="secondary" id="addReverseEvalBtn" disabled data-i18n="pet.addReverseEval">➕ 加入評估清單</button>
         </div>
         <div id="reverseStatus" style="display:none"></div>
         <div class="batch-obs-area">
-          <p class="hint" data-i18n="pet.batchHint">📋 批次貼上：每行一筆，格式 評分,HP,MP,攻,防,敏,回復,精神（評分可省略，會顯示於名稱旁）。使用上方反推參數，非成長模擬設定。</p>
-          <textarea id="batchObsInput" placeholder="4353,3036,2384,1355.70,644.56,486.00,169.10,80.74
-4342,3024,2369,1354.81,644.72,483.69,168.44,80.28"></textarea>
+          <p class="hint" data-i18n="pet.batchHint">📋 <strong>批次貼上</strong>：每行一筆，格式 <code>評分,HP,MP,攻,防,敏,回復,精神</code>（評分可省略，會顯示於名稱旁）。使用<strong>上方反推參數</strong>，非成長模擬設定。</p>
+          <textarea id="batchObsInput" placeholder="4353,3036,2384,1355.70,644.56,486.00,169.10,80.74&#10;4342,3024,2369,1354.81,644.72,483.69,168.44,80.28"></textarea>
           <div class="btn-row" style="margin-top:8px">
             <button type="button" class="secondary" id="batchReverseBtn" data-i18n="pet.batchReverseBtn">📋 批次評估並加入清單</button>
           </div>
@@ -926,10 +917,10 @@
     </div>
   </div>
 
-  <script src="./寵物成長模擬器_files/starcg_i18n.js.下載"></script>
-  <script src="./寵物成長模擬器_files/starcg_game_names.js.下載"></script>
-  <script src="./寵物成長模擬器_files/starcg_i18n_char_pet.js.下載"></script>
-  <script src="./寵物成長模擬器_files/starcg_i18n_messages.js.下載"></script>
+  <script src="starcg_i18n.js"></script>
+  <script src="starcg_game_names.js"></script>
+  <script src="starcg_i18n_char_pet.js"></script>
+  <script src="starcg_i18n_messages.js"></script>
   <script>
     function t(key, params) { return StarCG_I18N.t(key, params); }
     function gn(name) { return StarCG_I18N.displayGameName(name); }
@@ -2813,6 +2804,5 @@
     calculateCurrent();
     loadPets();
   </script>
-
-
-</body></html>
+</body>
+</html>
