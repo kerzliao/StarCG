@@ -87,6 +87,21 @@
             text-decoration: underline;
         }
 
+        .proxy-selector {
+            font-size: 0.85rem;
+            font-family: inherit;
+            color: var(--text-secondary);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 3px 6px;
+            cursor: pointer;
+        }
+
+        .proxy-selector:hover {
+            border-color: var(--accent-gold);
+        }
+
         /* Search Panel */
         .search-panel {
             background: var(--bg-card);
@@ -2879,6 +2894,13 @@
             <a href="https://www.starcg.net/" target="_blank" rel="noopener noreferrer" class="header-link" data-i18n="nav.site">🌐 官網</a>
             <a href="https://member.starcg.net/market.php?page=1&type=all&server=all" target="_blank" rel="noopener noreferrer" class="header-link" data-i18n="nav.market">🏪 官方市場</a>
             <a href="https://guide.starcg.net/" target="_blank" rel="noopener noreferrer" class="header-link" data-i18n="nav.guide">📖 官方攻略網</a>
+            <select id="proxySelect" class="proxy-selector" data-i18n-title="price.proxyTip" title="部分地區（如中國大陸、香港）可能連不上其中某個節點，可手動切換代理再重新搜尋">
+                <option value="auto" data-i18n="price.proxyAuto">🌐 自動選擇代理</option>
+                <option value="worker" data-i18n="price.proxyWorker">☁️ 自架 Worker</option>
+                <option value="corsproxy" data-i18n="price.proxyCorsproxy">🔀 corsproxy.io</option>
+                <option value="allorigins" data-i18n="price.proxyAllorigins">🔀 allorigins</option>
+                <option value="codetabs" data-i18n="price.proxyCodetabs">🔀 codetabs</option>
+            </select>
         </nav>
     </div>
 
@@ -3360,18 +3382,34 @@ const WORKER_URL = 'https://starcg-1.kerzliao.workers.dev/?u=';
 
 // CORS 代理：自架 Worker 排第一（穩定），公共代理留著當備援
 // （2026-08 實測：corsproxy.io 改要收費 API key、allorigins/codetabs 常連不上，別太依賴它們）
+// 部分地區（中國大陸、香港）曾回報 Cloudflare 節點連不上，所以每個代理都給 id，
+// 讓使用者能透過右上角選單手動指定要走哪個（見 initProxySelector / PROXY_STORAGE_KEY）。
 const CORS_PROXIES = [
-    { prefix: WORKER_URL, encode: true },
-    { prefix: 'https://corsproxy.io/?url=', encode: true },
-    { prefix: 'https://api.allorigins.win/raw?url=', encode: true },
-    { prefix: 'https://api.codetabs.com/v1/proxy/?quest=', encode: true }
+    { id: 'worker', prefix: WORKER_URL, encode: true },
+    { id: 'corsproxy', prefix: 'https://corsproxy.io/?url=', encode: true },
+    { id: 'allorigins', prefix: 'https://api.allorigins.win/raw?url=', encode: true },
+    { id: 'codetabs', prefix: 'https://api.codetabs.com/v1/proxy/?quest=', encode: true }
 ];
 
 // 本機用 proxy.py 測試時，自動優先走本機代理
 if (['localhost', '127.0.0.1'].includes(location.hostname)) {
-    CORS_PROXIES.unshift({ prefix: '/proxy?u=', encode: true });
+    CORS_PROXIES.unshift({ id: 'local', prefix: '/proxy?u=', encode: true });
 }
 let currentProxyIndex = 0;
+
+const PROXY_STORAGE_KEY = 'starcg_proxy_pref';
+function getProxyPref() {
+    try { return localStorage.getItem(PROXY_STORAGE_KEY) || 'auto'; } catch { return 'auto'; }
+}
+function setProxyPref(id) {
+    try { localStorage.setItem(PROXY_STORAGE_KEY, id); } catch { /* 私密瀏覽模式等情況下忽略 */ }
+}
+function initProxySelector() {
+    const sel = document.getElementById('proxySelect');
+    if (!sel) return;
+    sel.value = getProxyPref();
+    sel.addEventListener('change', () => setProxyPref(sel.value));
+}
 let marketSearchToken = 0;
 let historyLoadToken = 0;
 let lastMarketScanMode = 'normal';
@@ -3480,32 +3518,40 @@ async function fetchWithProxy(targetUrl) {
     // 加上時間戳繞過快取
     const cacheBuster = `_t=${Date.now()}`;
     const urlWithCache = targetUrl + (targetUrl.includes('?') ? '&' : '?') + cacheBuster;
-    
-    for (let i = 0; i < CORS_PROXIES.length; i++) {
-        const proxyIndex = (currentProxyIndex + i) % CORS_PROXIES.length;
-        const proxy = CORS_PROXIES[proxyIndex];
+
+    // 使用者若在右上角手動指定了代理，就只試那一個，不自動輪替
+    // （方便判斷「換一個節點就能連」到底是不是自己那個地區被擋的問題）
+    const pref = getProxyPref();
+    const forced = pref !== 'auto' ? CORS_PROXIES.find(p => p.id === pref) : null;
+    const candidates = forced ? [forced] : CORS_PROXIES;
+
+    for (let i = 0; i < candidates.length; i++) {
+        const proxy = forced ? candidates[i] : candidates[(currentProxyIndex + i) % candidates.length];
+        if (!proxy.prefix) continue; // WORKER_URL 尚未設定時會是空字串
         const url = proxy.prefix + (proxy.encode ? encodeURIComponent(urlWithCache) : urlWithCache);
-        
+
         try {
             const resp = await fetchWithTimeout(url, { cache: 'no-store' });
             const text = await resp.text();
-            
+
             // 檢查是否為錯誤回應（含 PHP/HTML 錯誤頁）
             if (!resp.ok || !looksLikeJson(text) || text.includes('error code:')) {
-                throw new Error(`Proxy ${proxyIndex} failed: ${resp.status}`);
+                throw new Error(`Proxy ${proxy.id} failed: ${resp.status}`);
             }
-            
+
             // 成功，記住這個 proxy
-            currentProxyIndex = proxyIndex;
-            starcgDiag.lastProxy = proxyIndex;
+            if (!forced) currentProxyIndex = CORS_PROXIES.indexOf(proxy);
+            starcgDiag.lastProxy = proxy.id;
             return text;
         } catch (err) {
-            console.warn(`Proxy ${proxyIndex} failed:`, err.message);
+            console.warn(`Proxy ${proxy.id} failed:`, err.message);
             lastError = err;
             starcgDiag.lastError = err.message;
         }
     }
-    const errMsg = T('price.proxyAllFail');
+    const errMsg = forced
+        ? T('price.proxyForcedFail', { proxy: forced.id })
+        : T('price.proxyAllFail');
     diagLog('proxy 全部失敗', lastError?.message);
     throw new Error(errMsg);
 }
@@ -8301,6 +8347,7 @@ function bootPriceChecker() {
     initProcurement();
     initTracked();
     initMarketSegments();
+    initProxySelector();
     updateTrackedCountBadge();
 }
 
