@@ -463,6 +463,7 @@
     'price.proxyCorsproxy': tr('🔀 corsproxy.io', '🔀 corsproxy.io', '🔀 corsproxy.io'),
     'price.proxyAllorigins': tr('🔀 allorigins', '🔀 allorigins', '🔀 allorigins'),
     'price.proxyCodetabs': tr('🔀 codetabs', '🔀 codetabs', '🔀 codetabs'),
+    'price.themeToggleTip': tr('切換深色/淺色模式', 'Toggle dark / light mode', '다크/라이트 모드 전환'),
     'price.fetchTimeout': tr('連線逾時（{sec} 秒）', 'Timeout ({sec}s)', '시간 초과 ({sec}초)'),
     'price.emptyNoHistory30d': tr('找不到歷史成交記錄（近 30 天）', 'No trades in last 30 days', '최근 30일 거래 없음'),
     'price.emptyHistoryFail': tr('搜尋歷史失敗', 'History search failed', '기록 검색 실패'),
