@@ -105,21 +105,6 @@
             text-decoration: underline;
         }
 
-        .proxy-selector {
-            font-size: 0.85rem;
-            font-family: inherit;
-            color: var(--text-secondary);
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 3px 6px;
-            cursor: pointer;
-        }
-
-        .proxy-selector:hover {
-            border-color: var(--accent-gold);
-        }
-
         .theme-toggle {
             font-size: 0.9rem;
             line-height: 1;
@@ -3028,13 +3013,6 @@
             <a href="https://www.starcg.net/" target="_blank" rel="noopener noreferrer" class="header-link" data-i18n="nav.site">🌐 官網</a>
             <a href="https://member.starcg.net/market.php?page=1&type=all&server=all" target="_blank" rel="noopener noreferrer" class="header-link" data-i18n="nav.market">🏪 官方市場</a>
             <a href="https://guide.starcg.net/" target="_blank" rel="noopener noreferrer" class="header-link" data-i18n="nav.guide">📖 官方攻略網</a>
-            <select id="proxySelect" class="proxy-selector" data-i18n-title="price.proxyTip" title="部分地區（如中國大陸、香港）可能連不上其中某個節點，可手動切換代理再重新搜尋">
-                <option value="auto" data-i18n="price.proxyAuto">🌐 自動選擇代理</option>
-                <option value="worker" data-i18n="price.proxyWorker">☁️ 自架 Worker</option>
-                <option value="corsproxy" data-i18n="price.proxyCorsproxy">🔀 corsproxy.io</option>
-                <option value="allorigins" data-i18n="price.proxyAllorigins">🔀 allorigins</option>
-                <option value="codetabs" data-i18n="price.proxyCodetabs">🔀 codetabs</option>
-            </select>
             <button type="button" id="themeToggle" class="theme-toggle" data-i18n-title="price.themeToggleTip" title="切換深色/淺色模式">🌙</button>
         </nav>
     </div>
@@ -3516,8 +3494,6 @@ function getVariableStatKeys(itemName, itemId) {
 const WORKER_URL = 'https://starcg-1.kerzliao.workers.dev/?u=';
 
 // CORS 代理：自架 Worker 排第一，公共代理留著當備援
-// 部分地區（中國大陸、香港）曾回報 Cloudflare 節點連不上，所以每個代理都給 id，
-// 讓使用者能透過右上角選單手動指定要走哪個（見 initProxySelector / PROXY_STORAGE_KEY）。
 const CORS_PROXIES = [
     { id: 'worker', prefix: WORKER_URL, encode: true },
     { id: 'corsproxy', prefix: 'https://corsproxy.io/?url=', encode: true },
@@ -3530,20 +3506,6 @@ if (['localhost', '127.0.0.1'].includes(location.hostname)) {
     CORS_PROXIES.unshift({ id: 'local', prefix: '/proxy?u=', encode: true });
 }
 let currentProxyIndex = 0;
-
-const PROXY_STORAGE_KEY = 'starcg_proxy_pref';
-function getProxyPref() {
-    try { return localStorage.getItem(PROXY_STORAGE_KEY) || 'auto'; } catch { return 'auto'; }
-}
-function setProxyPref(id) {
-    try { localStorage.setItem(PROXY_STORAGE_KEY, id); } catch { /* 私密瀏覽模式等情況下忽略 */ }
-}
-function initProxySelector() {
-    const sel = document.getElementById('proxySelect');
-    if (!sel) return;
-    sel.value = getProxyPref();
-    sel.addEventListener('change', () => setProxyPref(sel.value));
-}
 
 const THEME_STORAGE_KEY = 'starcg_theme';
 function getTheme() {
@@ -3677,14 +3639,8 @@ async function fetchWithProxy(targetUrl) {
     const cacheBuster = `_t=${Date.now()}`;
     const urlWithCache = targetUrl + (targetUrl.includes('?') ? '&' : '?') + cacheBuster;
 
-    // 使用者若在右上角手動指定了代理，就只試那一個，不自動輪替
-    // （方便判斷「換一個節點就能連」到底是不是自己那個地區被擋的問題）
-    const pref = getProxyPref();
-    const forced = pref !== 'auto' ? CORS_PROXIES.find(p => p.id === pref) : null;
-    const candidates = forced ? [forced] : CORS_PROXIES;
-
-    for (let i = 0; i < candidates.length; i++) {
-        const proxy = forced ? candidates[i] : candidates[(currentProxyIndex + i) % candidates.length];
+    for (let i = 0; i < CORS_PROXIES.length; i++) {
+        const proxy = CORS_PROXIES[(currentProxyIndex + i) % CORS_PROXIES.length];
         if (!proxy.prefix) continue; // WORKER_URL 尚未設定時會是空字串
         const url = proxy.prefix + (proxy.encode ? encodeURIComponent(urlWithCache) : urlWithCache);
 
@@ -3698,7 +3654,7 @@ async function fetchWithProxy(targetUrl) {
             }
 
             // 成功，記住這個 proxy
-            if (!forced) currentProxyIndex = CORS_PROXIES.indexOf(proxy);
+            currentProxyIndex = CORS_PROXIES.indexOf(proxy);
             starcgDiag.lastProxy = proxy.id;
             return text;
         } catch (err) {
@@ -3707,9 +3663,7 @@ async function fetchWithProxy(targetUrl) {
             starcgDiag.lastError = err.message;
         }
     }
-    const errMsg = forced
-        ? T('price.proxyForcedFail', { proxy: forced.id })
-        : T('price.proxyAllFail');
+    const errMsg = T('price.proxyAllFail');
     diagLog('proxy 全部失敗', lastError?.message);
     throw new Error(errMsg);
 }
@@ -8669,7 +8623,6 @@ function bootPriceChecker() {
     initProcurement();
     initTracked();
     initMarketSegments();
-    initProxySelector();
     initThemeToggle();
     updateTrackedCountBadge();
 }
