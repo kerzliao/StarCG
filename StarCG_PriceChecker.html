@@ -3639,6 +3639,19 @@ async function fetchWithProxy(targetUrl) {
     const cacheBuster = `_t=${Date.now()}`;
     const urlWithCache = targetUrl + (targetUrl.includes('?') ? '&' : '?') + cacheBuster;
 
+    // 先試不經代理直接打（member.starcg.net 目前沒開 CORS，正常瀏覽器理論上會被擋，
+    // 但如果之後對方開了、或某些環境下真的行得通，直連永遠比繞代理快、也更穩）
+    try {
+        const resp = await fetchWithTimeout(urlWithCache, { cache: 'no-store' }, 8000);
+        const text = await resp.text();
+        if (resp.ok && looksLikeJson(text) && !text.includes('error code:')) {
+            starcgDiag.lastProxy = 'direct';
+            return text;
+        }
+    } catch (err) {
+        console.warn('Direct fetch failed (expected if no CORS):', err.message);
+    }
+
     for (let i = 0; i < CORS_PROXIES.length; i++) {
         const proxy = CORS_PROXIES[(currentProxyIndex + i) % CORS_PROXIES.length];
         if (!proxy.prefix) continue; // WORKER_URL 尚未設定時會是空字串
