@@ -3490,12 +3490,18 @@ function getVariableStatKeys(itemName, itemId) {
 /* ========================================
    全域變數
 ======================================== */
-// 自己架的 Cloudflare Worker（見 cloudflare-worker.js），只允許代理 member.starcg.net / guide.starcg.net
+// 自己架的代理，各自獨立額度、互不影響：
+// - Cloudflare Worker（見 cloudflare-worker.js）
+// - Deno Deploy（見 deno-worker.js，Cloudflare 額度用完時的備援）
+// 兩者都只允許代理 member.starcg.net / guide.starcg.net
 const WORKER_URL = 'https://starcg-1.kerzliao.workers.dev/?u=';
+const DENO_WORKER_URL = 'https://heavy-macaw-3330.kerzliao.deno.net/?u=';
 
-// CORS 代理：自架 Worker 排第一，公共代理留著當備援
+// CORS 代理：自架的兩個排前面，公共代理留著當最後備援
+// （2026-08 實測：corsproxy.io 改要收費 API key、allorigins/codetabs 常連不上，別太依賴它們）
 const CORS_PROXIES = [
     { id: 'worker', prefix: WORKER_URL, encode: true },
+    { id: 'deno', prefix: DENO_WORKER_URL, encode: true },
     { id: 'corsproxy', prefix: 'https://corsproxy.io/?url=', encode: true },
     { id: 'allorigins', prefix: 'https://api.allorigins.win/raw?url=', encode: true },
     { id: 'codetabs', prefix: 'https://api.codetabs.com/v1/proxy/?quest=', encode: true }
